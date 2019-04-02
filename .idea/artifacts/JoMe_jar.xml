@@ -4,7 +4,6 @@
     <root id="archive" name="JoMe.jar">
       <element id="module-output" name="JoMe" />
       <element id="extracted-dir" path="$PROJECT_DIR$/mysql-connector-java-8.0.15.jar" path-in-jar="/" />
-      <element id="library" level="project" name="mysql-connector-java-8.0.15" />
     </root>
   </artifact>
 </component>

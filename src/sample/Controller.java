@@ -4,6 +4,8 @@ import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
 import javafx.geometry.Pos;
 import javafx.scene.control.*;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseEvent;
 
 import java.sql.*;
@@ -63,6 +65,9 @@ public class Controller {
     private VBox userVBox = new VBox();
     private User user;
 
+
+    @FXML
+    ImageView logo;
 
     @FXML
     protected void initialize() {
