@@ -16,6 +16,7 @@ import java.nio.file.Paths;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.Properties;
 
 import javafx.scene.layout.HBox;
@@ -28,10 +29,10 @@ import javafx.scene.web.WebView;
 public class Controller {
 
     //MySQL
-   // private String urlDB = "jdbc:mysql://51.38.132.58:3306/phpmyadmin";
-    //private String urlDB = "jdbc:mysql://51.38.132.58:3306/phpmyadmin";
-    //private String usernameDB = "phpmyadmin";
-    //private String passDB = "1loveLIZZARDq";
+    // private String urlDB = "jdbc:mysql://51.38.132.58:3306/jome";
+    private String urlDB = "jdbc:mysql://localhost:3306/jome?serverTimezone=Europe/Moscow&useSSL=false";
+    private String usernameDB = "root";
+    private String passDB = "";
 
     @FXML
     Pane mainPane;
@@ -45,7 +46,6 @@ public class Controller {
     Button signUpButton;
 
 
-
     private Label signInTitle = new Label("Sign in:");
     private TextField signInLogin = new TextField();
     private PasswordField signInPassword = new PasswordField();
@@ -54,24 +54,26 @@ public class Controller {
     private HBox loginHBox = new HBox(new Label("Login:"), signInLogin);
     private HBox passwordHBox = new HBox(new Label("Password:"), signInPassword);
 
-    WebView webView = new WebView();
-    WebEngine webEngine = webView.getEngine();
+    private WebView webView = new WebView();
+    private WebEngine webEngine = webView.getEngine();
 
-    VBox userVBox = new VBox();
+    private Connection connection = null;
+    private Statement statement = null;
+
+
+    private VBox userVBox = new VBox();
+
     @FXML
-    protected void initialize(){
-        /*try{
+    protected void initialize() {
+        try {
             Class.forName("com.mysql.cj.jdbc.Driver").getDeclaredConstructor().newInstance();
-            try (Connection conn = DriverManager.getConnection(urlDB, usernameDB, passDB)){
-
-                System.out.println("Connection to Store DB succesfull!");
-            }
-        }
-        catch(Exception ex){
+            connection = DriverManager.getConnection(urlDB, usernameDB, passDB);
+            System.out.println("Connection to Store DB succesfull!");
+        } catch (Exception ex) {
             System.out.println("Connection failed...");
 
             System.out.println(ex);
-        }*/
+        }
 
         signInButton.addEventHandler(MouseEvent.MOUSE_CLICKED, event -> {
             regAuthVBox.getChildren().remove(signInButton);
@@ -91,6 +93,7 @@ public class Controller {
 
             regAuthVBox.getChildren().add(signInButtonAccept);
         });
+
         signUpButton.addEventHandler(MouseEvent.MOUSE_CLICKED, event -> {
             regAuthVBox.getChildren().remove(signInButton);
             regAuthVBox.getChildren().remove(signUpButton);
@@ -120,8 +123,19 @@ public class Controller {
             regAuthVBox.getChildren().addAll(webView);
         });
         signInButtonAccept.addEventHandler(MouseEvent.MOUSE_CLICKED, event -> {
-
+            try {
+                statement = connection.createStatement();
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
         });
+        String sql = "INSERT INTO accounts (login, password) VALUES ('zubko', '12345678');";
+        //String sql = "INSERT INTO accounts (login, password) VALUES ('" + signInLogin.getText() + "'), '" + signInPassword.getText() + "');";
+        try {
+            statement.executeUpdate(sql);
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
     }
 }
 
