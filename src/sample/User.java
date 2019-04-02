@@ -17,7 +17,29 @@ public class User {
         this.password = password;
     }
 
-    private void addFriend(Integer friendId) {
+    public void addFriend(Integer friendId) {
         friendsList.add(friendId);
+    }
+    public List<Integer> getFriends() {
+        return friendsList;
+    }
+
+    public Integer getId() {
+        return id;
+    }
+    public void setId(Integer id) {
+        this.id = id;
+    }
+    public String getLogin() {
+        return login;
+    }
+    public void setLogin(String login) {
+        this.login = login;
+    }
+    public String getPassword() {
+        return password;
+    }
+    public void setPassword(String password) {
+        this.password = password;
     }
 }

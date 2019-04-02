@@ -7,6 +7,8 @@ import javafx.scene.control.*;
 import javafx.scene.input.MouseEvent;
 
 import java.sql.*;
+import java.util.ArrayList;
+import java.util.List;
 
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
@@ -33,7 +35,6 @@ public class Controller {
     @FXML
     Button signUpButton;
 
-
     //Fields
     private Label signInTitle = new Label("Sign in:");
     private TextField signInUpLogin = new TextField();
@@ -43,10 +44,13 @@ public class Controller {
     private Label signUpTitle = new Label("Sign up:");
     private Button signUpButtonAccept = new Button("Sign up");
 
+    private Button backToRegAuthButon = new Button("Back");
+
     private Label signInUpError = new Label();
 
     private HBox loginHBox = new HBox(new Label("Login:"), signInUpLogin);
     private HBox passwordHBox = new HBox(new Label("Password:"), signInUpPassword);
+
 
     private WebView webView = new WebView();
     private WebEngine webEngine = webView.getEngine();
@@ -54,8 +58,11 @@ public class Controller {
     private Connection connection = null;
     private Statement statement = null;
 
+    Button userAddFriend = new Button("Add friend");
+
     private VBox userVBox = new VBox();
     private User user;
+
 
     @FXML
     protected void initialize() {
@@ -94,8 +101,8 @@ public class Controller {
                     regAuthVBox.getChildren().remove(signInTitle);
                     regAuthVBox.getChildren().remove(signInUpError);
 
-                    ShowMainWindow();
                     SaveUserInfo(resultSet.getInt("id"), resultSet.getString("login"), resultSet.getString("password"));
+                    ShowMainWindow();
                 } else {
                     throw new Exception("MySQL Add to Database error!");
                 }
@@ -127,8 +134,8 @@ public class Controller {
                     regAuthVBox.getChildren().remove(signUpTitle);
                     regAuthVBox.getChildren().remove(signInUpError);
 
-                    ShowMainWindow();
                     SaveUserInfo(resultSet.getInt("id"), resultSet.getString("login"), resultSet.getString("password"));
+                    ShowMainWindow();
                 } else {
                     signInUpError.setText("Incorrect data or no such account!");
                     throw new Exception("MySQL Add to Database error!");
@@ -136,6 +143,11 @@ public class Controller {
             } catch (Exception e) {
                 e.printStackTrace();
             }
+        });
+
+        backToRegAuthButon.addEventHandler(MouseEvent.MOUSE_CLICKED, event -> {
+            regAuthVBox.getChildren().removeAll(signInTitle, signUpTitle, signInButtonAccept, signUpButtonAccept, backToRegAuthButon, loginHBox, passwordHBox, signInUpError);
+            regAuthVBox.getChildren().addAll(signInButton, signUpButton);
         });
     }
 
@@ -151,37 +163,29 @@ public class Controller {
         userVBox.setSpacing(10);
         userVBox.setAlignment(Pos.CENTER);
 
-        Label userPage = new Label("User Page");
+        Label userPage = new Label("User: " + user.getLogin() + "#" + user.getId());
         userPage.setFont(new Font("Arial", 24));
         userVBox.getChildren().add(userPage);
+
         ListView<String> friends = new ListView<>();
-        friends.setItems(FXCollections.observableArrayList("Klimded", "Archeex", "alyohea", "ZubDestroy", "IvanMazur"));
+        user.addFriend(5);
+        user.addFriend(12);
+        user.addFriend(13);
+        user.addFriend(14);
+        friends.setItems(FXCollections.observableList(LoadFriendsById(user.getFriends())));
         TitledPane friendsList = new TitledPane("Friends", friends);
         friendsList.setAnimated(true);
         friendsList.setExpanded(false);
+
         userVBox.getChildren().add(friendsList);
+
+        userVBox.getChildren().add(userAddFriend);
 
         mainPane.getChildren().add(userVBox);
 
         webEngine.load("https://www.google.com/maps");
 
         regAuthVBox.getChildren().addAll(webView);
-    }
-    private void ShowSignUpWindow() {
-        regAuthVBox.getChildren().add(signUpTitle);
-
-        loginHBox.setMaxWidth(250);
-        loginHBox.setSpacing(20);
-        loginHBox.setAlignment(Pos.CENTER_LEFT);
-        regAuthVBox.getChildren().add(loginHBox);
-
-        passwordHBox.setMaxWidth(250);
-        passwordHBox.setSpacing(20);
-        passwordHBox.setAlignment(Pos.CENTER_LEFT);
-        regAuthVBox.getChildren().add(passwordHBox);
-
-        regAuthVBox.getChildren().add(signUpButtonAccept);
-        regAuthVBox.getChildren().add(signInUpError);
     }
     private void ShowSignInWindow() {
         regAuthVBox.getChildren().remove(signInButton);
@@ -199,7 +203,23 @@ public class Controller {
         passwordHBox.setAlignment(Pos.CENTER_LEFT);
         regAuthVBox.getChildren().add(passwordHBox);
 
-        regAuthVBox.getChildren().add(signInButtonAccept);
+        regAuthVBox.getChildren().addAll(signInButtonAccept, backToRegAuthButon);
+        regAuthVBox.getChildren().add(signInUpError);
+    }
+    private void ShowSignUpWindow() {
+        regAuthVBox.getChildren().add(signUpTitle);
+
+        loginHBox.setMaxWidth(250);
+        loginHBox.setSpacing(20);
+        loginHBox.setAlignment(Pos.CENTER_LEFT);
+        regAuthVBox.getChildren().add(loginHBox);
+
+        passwordHBox.setMaxWidth(250);
+        passwordHBox.setSpacing(20);
+        passwordHBox.setAlignment(Pos.CENTER_LEFT);
+        regAuthVBox.getChildren().add(passwordHBox);
+
+        regAuthVBox.getChildren().addAll(signUpButtonAccept, backToRegAuthButon);
         regAuthVBox.getChildren().add(signInUpError);
     }
     private void SaveUserInfo(Integer id, String login, String password) {
@@ -214,5 +234,25 @@ public class Controller {
             System.out.println("Connection failed...");
             System.out.println(ex);
         }
+    }
+    private List<String> LoadFriendsById(List<Integer> list) {
+        List<String> newList = new ArrayList<>();
+        for (Integer item : list) {
+            String sql;
+            ResultSet resultSet = null;
+            try {
+                statement = connection.createStatement();
+
+                sql = "SELECT * FROM accounts WHERE id = '" + item + "'";
+                resultSet = statement.executeQuery(sql);
+
+                assert resultSet != null;
+                if (resultSet.next())
+                    newList.add(resultSet.getString("login") + "#" + resultSet.getInt("id"));
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+        return newList;
     }
 }

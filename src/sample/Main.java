@@ -14,6 +14,7 @@ public class Main extends Application {
         primaryStage.setTitle("JoMe Application");
         primaryStage.setScene(new Scene(root, 1000, 550));
         primaryStage.show();
+        primaryStage.setResizable(false);
     }
 
 
