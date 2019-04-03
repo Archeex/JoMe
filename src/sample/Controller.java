@@ -2,12 +2,16 @@ package sample;
 
 import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
 import javafx.geometry.Pos;
+import javafx.scene.Node;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
 import javafx.scene.control.*;
-import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseEvent;
 
+import java.io.IOException;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
@@ -18,6 +22,7 @@ import javafx.scene.layout.VBox;
 import javafx.scene.text.Font;
 import javafx.scene.web.WebEngine;
 import javafx.scene.web.WebView;
+import javafx.stage.Stage;
 
 public class Controller {
 
@@ -42,7 +47,6 @@ public class Controller {
     private TextField signInUpLogin = new TextField();
     private PasswordField signInUpPassword = new PasswordField();
     private Button signInButtonAccept = new Button("Sign in");
-
     private Label signUpTitle = new Label("Sign up:");
     private Button signUpButtonAccept = new Button("Sign up");
 
@@ -57,14 +61,13 @@ public class Controller {
     private WebView webView = new WebView();
     private WebEngine webEngine = webView.getEngine();
 
-    private Connection connection = null;
+    static Connection connection = null;
     private Statement statement = null;
 
-    Button userAddFriend = new Button("Add friend");
+    private Button userAddFriendButton = new Button("Add friend");
 
     private VBox userVBox = new VBox();
-    private User user;
-
+    static User user;
 
     @FXML
     ImageView logo;
@@ -76,10 +79,70 @@ public class Controller {
         signInButton.addEventHandler(MouseEvent.MOUSE_CLICKED, event -> {
             regAuthVBox.getChildren().remove(signInButton);
             regAuthVBox.getChildren().remove(signUpButton);
+            regAuthVBox.getChildren().remove(logo);
 
             ShowSignInWindow();
         });
         signInButtonAccept.addEventHandler(MouseEvent.MOUSE_CLICKED, event -> {
+            String sql;
+            ResultSet resultSet = null;
+            try {
+                statement = connection.createStatement();
+
+                sql = "SELECT * FROM accounts WHERE login = '" + signInUpLogin.getText() + "' AND password = '" + signInUpPassword.getText() + "'";
+                resultSet = statement.executeQuery(sql);
+
+                assert resultSet != null;
+                if (resultSet.next()) {
+                    regAuthVBox.getChildren().remove(signInButtonAccept);
+                    regAuthVBox.getChildren().remove(loginHBox);
+                    regAuthVBox.getChildren().remove(passwordHBox);
+                    regAuthVBox.getChildren().remove(signInTitle);
+                    regAuthVBox.getChildren().remove(signInUpError);
+                    regAuthVBox.getChildren().remove(backToRegAuthButon);
+
+                    SaveUserInfo(resultSet.getInt("id"), resultSet.getString("login"), resultSet.getString("password"));
+                    ShowMainWindow();
+                } else {
+                    signInUpError.setText("Incorrect data or no such account!");
+                    throw new Exception("MySQL Add to Database error!");
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        });
+
+        backToRegAuthButon.addEventHandler(MouseEvent.MOUSE_CLICKED, event -> {
+            regAuthVBox.getChildren().removeAll(signInTitle, signUpTitle, signInButtonAccept, signUpButtonAccept, backToRegAuthButon, loginHBox, passwordHBox, signInUpError);
+            ShowStartupWindow();
+        });
+        userAddFriendButton.addEventHandler(MouseEvent.MOUSE_CLICKED, event -> {
+            Parent root;
+            try {
+                root = FXMLLoader.load(getClass().getResource("addFriend.fxml"));
+                //AddFriendController addFriendController = new AddFriendController(user, connection, statement);
+                Stage stage = new Stage();
+                stage.setTitle("JoMe / Add friend");
+                stage.setScene(new Scene(root, 450, 250));
+                stage.show();
+                // Hide this current window (if this is what you want)
+                //((Node)(event.getSource())).getScene().getWindow().hide();
+            }
+            catch (IOException e) {
+                e.printStackTrace();
+            }
+
+            //webEngine.load("https://goo.gl/maps/prciAcn9z862");
+        });
+
+        signUpButton.addEventHandler(MouseEvent.MOUSE_CLICKED, event -> {
+            regAuthVBox.getChildren().remove(signInButton);
+            regAuthVBox.getChildren().remove(signUpButton);
+            regAuthVBox.getChildren().remove(logo);
+
+            ShowSignUpWindow();
+        });
+        signUpButtonAccept.addEventHandler(MouseEvent.MOUSE_CLICKED, event -> {
             String sql;
             ResultSet resultSet = null;
             try {
@@ -100,65 +163,30 @@ public class Controller {
 
                 assert resultSet != null;
                 if (resultSet.next()) {
-                    regAuthVBox.getChildren().remove(signInButtonAccept);
-                    regAuthVBox.getChildren().remove(loginHBox);
-                    regAuthVBox.getChildren().remove(passwordHBox);
-                    regAuthVBox.getChildren().remove(signInTitle);
-                    regAuthVBox.getChildren().remove(signInUpError);
-
-                    SaveUserInfo(resultSet.getInt("id"), resultSet.getString("login"), resultSet.getString("password"));
-                    ShowMainWindow();
-                } else {
-                    throw new Exception("MySQL Add to Database error!");
-                }
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        });
-
-        signUpButton.addEventHandler(MouseEvent.MOUSE_CLICKED, event -> {
-            regAuthVBox.getChildren().remove(signInButton);
-            regAuthVBox.getChildren().remove(signUpButton);
-
-            ShowSignUpWindow();
-        });
-        signUpButtonAccept.addEventHandler(MouseEvent.MOUSE_CLICKED, event -> {
-            String sql;
-            ResultSet resultSet = null;
-            try {
-                statement = connection.createStatement();
-
-                sql = "SELECT * FROM accounts WHERE login = '" + signInUpLogin.getText() + "' AND password = '" + signInUpPassword.getText() + "'";
-                resultSet = statement.executeQuery(sql);
-
-                assert resultSet != null;
-                if (resultSet.next()) {
                     regAuthVBox.getChildren().remove(signUpButtonAccept);
                     regAuthVBox.getChildren().remove(loginHBox);
                     regAuthVBox.getChildren().remove(passwordHBox);
                     regAuthVBox.getChildren().remove(signUpTitle);
                     regAuthVBox.getChildren().remove(signInUpError);
+                    regAuthVBox.getChildren().remove(backToRegAuthButon);
 
                     SaveUserInfo(resultSet.getInt("id"), resultSet.getString("login"), resultSet.getString("password"));
                     ShowMainWindow();
                 } else {
-                    signInUpError.setText("Incorrect data or no such account!");
                     throw new Exception("MySQL Add to Database error!");
                 }
             } catch (Exception e) {
                 e.printStackTrace();
             }
         });
-
-        backToRegAuthButon.addEventHandler(MouseEvent.MOUSE_CLICKED, event -> {
-            regAuthVBox.getChildren().removeAll(signInTitle, signUpTitle, signInButtonAccept, signUpButtonAccept, backToRegAuthButon, loginHBox, passwordHBox, signInUpError);
-            regAuthVBox.getChildren().addAll(signInButton, signUpButton);
-        });
     }
 
+    private void ShowStartupWindow() {
+        regAuthVBox.getChildren().addAll(logo, signInButton, signUpButton);
+    }
     private void ShowMainWindow() {
-        regAuthVBox.getChildren().remove(signInButton);
-        regAuthVBox.getChildren().remove(signUpButton);
+//        regAuthVBox.getChildren().remove(signInButton);
+//        regAuthVBox.getChildren().remove(signUpButton);
 
         regAuthVBox.setLayoutX(0);
         regAuthVBox.setPrefWidth(700);
@@ -184,7 +212,7 @@ public class Controller {
 
         userVBox.getChildren().add(friendsList);
 
-        userVBox.getChildren().add(userAddFriend);
+        userVBox.getChildren().add(userAddFriendButton);
 
         mainPane.getChildren().add(userVBox);
 
@@ -193,8 +221,8 @@ public class Controller {
         regAuthVBox.getChildren().addAll(webView);
     }
     private void ShowSignInWindow() {
-        regAuthVBox.getChildren().remove(signInButton);
-        regAuthVBox.getChildren().remove(signUpButton);
+//        regAuthVBox.getChildren().remove(signInButton);
+//        regAuthVBox.getChildren().remove(signUpButton);
 
         regAuthVBox.getChildren().add(signInTitle);
 
