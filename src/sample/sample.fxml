@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <?import javafx.geometry.Insets?>
+<?import javafx.geometry.Point3D?>
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.image.Image?>
 <?import javafx.scene.image.ImageView?>
@@ -8,20 +9,20 @@
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.Font?>
 
-<Pane fx:id="mainPane" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="550.0" prefWidth="1000.0" xmlns="http://javafx.com/javafx/8.0.121" xmlns:fx="http://javafx.com/fxml/1" fx:controller="sample.Controller">
+<Pane fx:id="mainPane" maxHeight="550.0" maxWidth="-Infinity" minHeight="550.0" minWidth="-Infinity" prefHeight="550.0" prefWidth="1000.0" xmlns="http://javafx.com/javafx/8.0.121" xmlns:fx="http://javafx.com/fxml/1" fx:controller="sample.Controller">
    <children>
-      <VBox fx:id="regAuthVBox" alignment="CENTER" fillWidth="false" layoutX="250.0" maxWidth="1000.0" minHeight="200.0" prefHeight="550.0" prefWidth="500.0" spacing="50.0">
+      <VBox fx:id="regAuthVBox" alignment="CENTER" fillWidth="false" layoutX="250.0" maxHeight="550.0" maxWidth="1000.0" minHeight="550.0" pickOnBounds="false" prefHeight="550.0" prefWidth="500.0" spacing="50.0">
          <children>
             <ImageView fx:id="logo" fitHeight="200.0" fitWidth="200.0" pickOnBounds="true" preserveRatio="true">
                <image>
                   <Image url="@../res/JoMe.png" />
                </image></ImageView>
-            <Button fx:id="signInButton" mnemonicParsing="false" prefWidth="100.0" text="Sign in">
+            <Button fx:id="signInButton" mnemonicParsing="false" prefWidth="100.0" text="Sign in" textFill="WHITE">
                <font>
                   <Font size="20.0" />
                </font>
             </Button>
-            <Button fx:id="signUpButton" mnemonicParsing="false" prefWidth="100.0" text="Sign up">
+            <Button fx:id="signUpButton" mnemonicParsing="false" prefWidth="100.0" text="Sign up" textFill="WHITE">
                <font>
                   <Font size="20.0" />
                </font>
@@ -30,6 +31,9 @@
          <opaqueInsets>
             <Insets />
          </opaqueInsets>
+         <rotationAxis>
+            <Point3D />
+         </rotationAxis>
       </VBox>
    </children>
 </Pane>

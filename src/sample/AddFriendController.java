@@ -20,10 +20,10 @@ public class AddFriendController {
 
     private VBox mainBox = new VBox();
     private Label loginLabel = new Label("Login");
-    TextField loginField = new TextField();
+    private TextField loginField = new TextField();
     private HBox loginSearch = new HBox();
     private Button searchButton = new Button("Add friend!");
-    Label errorField = new Label();
+    private Label errorField = new Label();
 
     //private Connection connection;
     private Statement statement;

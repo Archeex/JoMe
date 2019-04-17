@@ -1,0 +1,28 @@
+* {
+    -fx-background-color: linear-gradient(#F5F5F5, #BCBCBC);
+}
+
+#regAuthVBox {
+    -fx-background-color: #FF0000;
+    opacity: 0.1;
+}
+
+#signInButton {
+     -fx-background-color: linear-gradient(#55E455, #54E476);
+     -fx-effect: dropshadow( three-pass-box , rgba(0,0,0,0.6) , 3, 0.0 , 0 , 1 );
+}
+
+#signInButton:hover {
+     -fx-background-color: linear-gradient(#37A337, #309247);
+     -fx-effect: dropshadow( three-pass-box , rgba(0,0,0,0.6) , 3, 0.0 , 0 , 1 );
+}
+
+#signUpButton {
+    -fx-background-color: linear-gradient(#5456E4, #7A54E4);
+    -fx-effect: dropshadow( three-pass-box , rgba(0,0,0,0.6) , 3, 0.0 , 0 , 1 );
+}
+
+#signUpButton:hover {
+    -fx-background-color: linear-gradient(#1F21A6, #46279B);
+    -fx-effect: dropshadow( three-pass-box , rgba(0,0,0,0.6) , 3, 0.0 , 0 , 1 );
+}

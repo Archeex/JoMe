@@ -3,6 +3,7 @@ package sample;
 import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
+import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.Parent;
@@ -57,7 +58,6 @@ public class Controller {
     private HBox loginHBox = new HBox(new Label("Login:"), signInUpLogin);
     private HBox passwordHBox = new HBox(new Label("Password:"), signInUpPassword);
 
-
     private WebView webView = new WebView();
     private WebEngine webEngine = webView.getEngine();
 
@@ -74,6 +74,8 @@ public class Controller {
 
     @FXML
     protected void initialize() {
+        mainPane.getStylesheets().add("res/signInButton.css");
+//        signInButton.setStyle("signInButton.css");
         ConnectToDatabase();
 
         signInButton.addEventHandler(MouseEvent.MOUSE_CLICKED, event -> {
@@ -132,7 +134,7 @@ public class Controller {
                 e.printStackTrace();
             }
 
-            //webEngine.load("https://goo.gl/maps/prciAcn9z862");
+            webEngine.load("https://goo.gl/maps/prciAcn9z862");
         });
 
         signUpButton.addEventHandler(MouseEvent.MOUSE_CLICKED, event -> {
@@ -185,9 +187,6 @@ public class Controller {
         regAuthVBox.getChildren().addAll(logo, signInButton, signUpButton);
     }
     private void ShowMainWindow() {
-//        regAuthVBox.getChildren().remove(signInButton);
-//        regAuthVBox.getChildren().remove(signUpButton);
-
         regAuthVBox.setLayoutX(0);
         regAuthVBox.setPrefWidth(700);
 
@@ -197,15 +196,12 @@ public class Controller {
         userVBox.setAlignment(Pos.CENTER);
 
         Label userPage = new Label("User: " + user.getLogin() + "#" + user.getId());
+        userPage.setPadding(new Insets(10, 0, 0, 0));
         userPage.setFont(new Font("Arial", 24));
         userVBox.getChildren().add(userPage);
 
         ListView<String> friends = new ListView<>();
-        user.addFriend(5);
-        user.addFriend(12);
-        user.addFriend(13);
-        user.addFriend(14);
-        friends.setItems(FXCollections.observableList(LoadFriendsById(user.getFriends())));
+        friends.setItems(FXCollections.observableList(user.getFriends()));
         TitledPane friendsList = new TitledPane("Friends", friends);
         friendsList.setAnimated(true);
         friendsList.setExpanded(false);
@@ -221,9 +217,6 @@ public class Controller {
         regAuthVBox.getChildren().addAll(webView);
     }
     private void ShowSignInWindow() {
-//        regAuthVBox.getChildren().remove(signInButton);
-//        regAuthVBox.getChildren().remove(signUpButton);
-
         regAuthVBox.getChildren().add(signInTitle);
 
         loginHBox.setMaxWidth(250);
@@ -268,24 +261,7 @@ public class Controller {
             System.out.println(ex);
         }
     }
-    private List<String> LoadFriendsById(List<Integer> list) {
-        List<String> newList = new ArrayList<>();
-        for (Integer item : list) {
-            String sql;
-            ResultSet resultSet = null;
-            try {
-                statement = connection.createStatement();
-
-                sql = "SELECT * FROM accounts WHERE id = '" + item + "'";
-                resultSet = statement.executeQuery(sql);
-
-                assert resultSet != null;
-                if (resultSet.next())
-                    newList.add(resultSet.getString("login") + "#" + resultSet.getInt("id"));
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        }
-        return newList;
-    }
+//    private List<String> LoadFriendsById(List<Integer> list) {
+//        return user.getFriends();
+//    }
 }
