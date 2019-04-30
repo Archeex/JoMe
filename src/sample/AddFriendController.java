@@ -1,5 +1,6 @@
 package sample;
 
+import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
@@ -49,14 +50,14 @@ public class AddFriendController {
             try {
                 statement = Controller.connection.createStatement();
 
-                sql = "SELECT * FROM accounts WHERE login = '" + loginField.getText() + "'";
+                sql = "SELECT * FROM accounts WHERE id = '" + loginField.getText() + "'";
                 resultSet = statement.executeQuery(sql);
                 if(resultSet.next()) {
                     Integer tempId = resultSet.getInt("id");
                     if(!Objects.equals(tempId, Controller.user.getId())) {
-                        sql = "UPDATE accounts SET friends = '" + tempId + "' WHERE login = '" + Controller.user.getLogin() + "'";
-                        statement.executeUpdate(sql);
+                        Controller.user.addFriend(Integer.valueOf(loginField.getText()));
                         errorField.setText("Friend was added!");
+                        Controller.friends.setItems(FXCollections.observableList(Controller.LoadFriends(Controller.user.getFriends())));
                     }
                 }
                 else {

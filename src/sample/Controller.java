@@ -13,6 +13,7 @@ import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseEvent;
 
 import java.io.IOException;
+import java.lang.Float;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
@@ -69,12 +70,14 @@ public class Controller {
     private VBox userVBox = new VBox();
     static User user;
 
+    static ListView<String> friends = new ListView<>();
+
     @FXML
     ImageView logo;
 
     @FXML
     protected void initialize() {
-        mainPane.getStylesheets().add("res/signInButton.css");
+        //mainPane.getStylesheets().add("res/signInButton.css");
 //        signInButton.setStyle("signInButton.css");
         ConnectToDatabase();
 
@@ -195,17 +198,12 @@ public class Controller {
         userVBox.setSpacing(10);
         userVBox.setAlignment(Pos.CENTER);
 
-        Label userPage = new Label("User: " + user.getLogin() + "#" + user.getId());
+        Label userPage = new Label("User: " + user.getLogin());
         userPage.setPadding(new Insets(10, 0, 0, 0));
         userPage.setFont(new Font("Arial", 24));
         userVBox.getChildren().add(userPage);
 
-        ListView<String> friends = new ListView<>();
-<<<<<<< HEAD
         friends.setItems(FXCollections.observableList(LoadFriends(user.getFriends())));
-=======
-        friends.setItems(FXCollections.observableList(user.getFriends()));
->>>>>>> f886a3b5f38ac11e0e833055659c84dbf72baa07
         TitledPane friendsList = new TitledPane("Friends", friends);
         friendsList.setAnimated(true);
         friendsList.setExpanded(false);
@@ -216,46 +214,31 @@ public class Controller {
 
         mainPane.getChildren().add(userVBox);
 
-        CreateMapRequest();
-        webEngine.load("https://www.google.com/maps");
-
+        webEngine.load(CreateMapRequest());
+        webView.setContextMenuEnabled(false);
         regAuthVBox.getChildren().addAll(webView);
     }
 
-    private void CreateMapRequest() {
-        System.out.println(user.getFriends());
+    private String CreateMapRequest() {
+        StringBuilder mapURL = new StringBuilder("https://maps.googleapis.com/maps/api/staticmap?&size=700x550&maptype=roadmap");
+        for(User item : user.getFriends()) {
+            if(!item.getCoordinateX().equals(0.0f)) {
+                mapURL.append("&markers=color:blue%7Clabel:").append(GetIdInList(item.getLogin())).append("%7C").append(item.getCoordinateX()).append(",").append(item.getCoordinateY());
+            }
+        }
+        mapURL.append("&key=AIzaSyDJZqRCFMS5d0eU8K5Sch2mhQYjzqDbgRM");
+        System.out.println(mapURL);
+        return mapURL.toString();
+    }
 
-
-
-
-
-
-
-
-//        for(Integer friendId : user.getFriends()) {
-//            String sql;
-//            ResultSet resultSet = null;
-//            try {
-//                statement = Controller.connection.createStatement();
-//
-//                sql = "SELECT * FROM accounts WHERE id = '" + friendId + "'";
-//                resultSet = statement.executeQuery(sql);
-//                if(resultSet.next()) {
-//                    Integer tempId = resultSet.getInt("id");
-//                    if(!Objects.equals(tempId, Controller.user.getId())) {
-//                        sql = "UPDATE accounts SET friends = '" + tempId + "' WHERE login = '" + Controller.user.getLogin() + "'";
-//                        statement.executeUpdate(sql);
-//                        errorField.setText("Friend was added!");
-//                    }
-//                }
-//                else {
-//                    errorField.setText("No such user!");
-//                }
-//            } catch (Exception e) {
-//                e.printStackTrace();
-//            }
-//        }
-
+    private Integer GetIdInList(String name) {
+        Integer count = 1;
+        for(String item : friends.getItems()) {
+            if(item.contains(name))
+                return count;
+            count++;
+        }
+        return -1;
     }
 
     private void ShowSignInWindow() {
@@ -332,14 +315,15 @@ public class Controller {
             System.out.println(ex);
         }
     }
-<<<<<<< HEAD
-    private List<String> LoadFriends(List<User> list) {
+    public static List<String> LoadFriends(List<User> list) {
         List<String> newList = new ArrayList<>();
+        Integer num = 1;
         for (User item : list) {
-            newList.add(item.getLogin() + "#" + item.getId());
+            newList.add(num++ + ": " + item.getLogin());
         }
         return newList;
     }
+
     @Deprecated
     private List<String> LoadFriendsById(List<Integer> list) {
         List<String> newList = new ArrayList<>();
@@ -354,16 +338,11 @@ public class Controller {
 
                 assert resultSet != null;
                 if (resultSet.next())
-                    newList.add(resultSet.getString("login") + "#" + resultSet.getInt("id"));
+                    newList.add(resultSet.getString("login"));
             } catch (Exception e) {
                 e.printStackTrace();
             }
         }
         return newList;
     }
-=======
-//    private List<String> LoadFriendsById(List<Integer> list) {
-//        return user.getFriends();
-//    }
->>>>>>> f886a3b5f38ac11e0e833055659c84dbf72baa07
 }
