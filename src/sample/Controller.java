@@ -101,7 +101,7 @@ public class Controller {
                     regAuthVBox.getChildren().remove(signInUpError);
                     regAuthVBox.getChildren().remove(backToRegAuthButon);
 
-                    SaveUserInfo(resultSet.getInt("id"), resultSet.getString("login"), resultSet.getString("password"));
+                    LoadUserInfo(resultSet.getInt("id"), resultSet.getString("login"), resultSet.getString("password"), resultSet.getFloat("coordinateX"), resultSet.getFloat("coordinateY"));
                     ShowMainWindow();
                 } else {
                     signInUpError.setText("Incorrect data or no such account!");
@@ -170,7 +170,7 @@ public class Controller {
                     regAuthVBox.getChildren().remove(signInUpError);
                     regAuthVBox.getChildren().remove(backToRegAuthButon);
 
-                    SaveUserInfo(resultSet.getInt("id"), resultSet.getString("login"), resultSet.getString("password"));
+                    SaveUserInfo(resultSet.getInt("id"), resultSet.getString("login"), resultSet.getString("password"), resultSet.getFloat("coordinateX"), resultSet.getFloat("coordinateY"));
                     ShowMainWindow();
                 } else {
                     throw new Exception("MySQL Add to Database error!");
@@ -185,9 +185,6 @@ public class Controller {
         regAuthVBox.getChildren().addAll(logo, signInButton, signUpButton);
     }
     private void ShowMainWindow() {
-//        regAuthVBox.getChildren().remove(signInButton);
-//        regAuthVBox.getChildren().remove(signUpButton);
-
         regAuthVBox.setLayoutX(0);
         regAuthVBox.setPrefWidth(700);
 
@@ -201,11 +198,7 @@ public class Controller {
         userVBox.getChildren().add(userPage);
 
         ListView<String> friends = new ListView<>();
-        user.addFriend(5);
-        user.addFriend(12);
-        user.addFriend(13);
-        user.addFriend(14);
-        friends.setItems(FXCollections.observableList(LoadFriendsById(user.getFriends())));
+        friends.setItems(FXCollections.observableList(LoadFriends(user.getFriends())));
         TitledPane friendsList = new TitledPane("Friends", friends);
         friendsList.setAnimated(true);
         friendsList.setExpanded(false);
@@ -216,10 +209,48 @@ public class Controller {
 
         mainPane.getChildren().add(userVBox);
 
+        CreateMapRequest();
         webEngine.load("https://www.google.com/maps");
 
         regAuthVBox.getChildren().addAll(webView);
     }
+
+    private void CreateMapRequest() {
+        System.out.println(user.getFriends());
+
+
+
+
+
+
+
+
+//        for(Integer friendId : user.getFriends()) {
+//            String sql;
+//            ResultSet resultSet = null;
+//            try {
+//                statement = Controller.connection.createStatement();
+//
+//                sql = "SELECT * FROM accounts WHERE id = '" + friendId + "'";
+//                resultSet = statement.executeQuery(sql);
+//                if(resultSet.next()) {
+//                    Integer tempId = resultSet.getInt("id");
+//                    if(!Objects.equals(tempId, Controller.user.getId())) {
+//                        sql = "UPDATE accounts SET friends = '" + tempId + "' WHERE login = '" + Controller.user.getLogin() + "'";
+//                        statement.executeUpdate(sql);
+//                        errorField.setText("Friend was added!");
+//                    }
+//                }
+//                else {
+//                    errorField.setText("No such user!");
+//                }
+//            } catch (Exception e) {
+//                e.printStackTrace();
+//            }
+//        }
+
+    }
+
     private void ShowSignInWindow() {
 //        regAuthVBox.getChildren().remove(signInButton);
 //        regAuthVBox.getChildren().remove(signUpButton);
@@ -255,8 +286,37 @@ public class Controller {
         regAuthVBox.getChildren().addAll(signUpButtonAccept, backToRegAuthButon);
         regAuthVBox.getChildren().add(signInUpError);
     }
-    private void SaveUserInfo(Integer id, String login, String password) {
+    private void SaveUserInfo(Integer id, String login, String password, Float x, Float y) {
         user = new User(id, login, password);
+        user.setCoordinateX(x);
+        user.setCoordinateY(y);
+    }
+    private void LoadUserInfo(Integer id, String login, String password, Float x, Float y) {
+        user = new User(id, login, password);
+        user.setCoordinateX(x);
+        user.setCoordinateY(y);
+
+        String sql;
+        ResultSet resultSet = null;
+        String friends;
+        try {
+            statement = connection.createStatement();
+            sql = "SELECT * FROM accounts WHERE id = '" + id + "'";
+            resultSet = statement.executeQuery(sql);
+            if (resultSet.next()) {
+                friends = resultSet.getString("friends");
+                if(!friends.isEmpty()) {
+                    for(String str : friends.split(",")) {
+                        user.addFriend(Integer.valueOf(str));
+                    }
+                }
+                else {
+                    throw new Exception("No friends :(");
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
     private void ConnectToDatabase() {
         try {
@@ -268,6 +328,14 @@ public class Controller {
             System.out.println(ex);
         }
     }
+    private List<String> LoadFriends(List<User> list) {
+        List<String> newList = new ArrayList<>();
+        for (User item : list) {
+            newList.add(item.getLogin() + "#" + item.getId());
+        }
+        return newList;
+    }
+    @Deprecated
     private List<String> LoadFriendsById(List<Integer> list) {
         List<String> newList = new ArrayList<>();
         for (Integer item : list) {
