@@ -1,4 +1,0 @@
-#signInButton {
-    -fx-background-color:  linear-gradient(#55E455, #54E476)
-    -fx-effect: dropshadow( three-pass-box , rgba(0,0,0,0.6) , 3, 0.0 , 0 , 1 )
-}

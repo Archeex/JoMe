@@ -5,10 +5,11 @@ import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
-import javafx.scene.Node;
+import javafx.scene.Cursor;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
+import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseEvent;
 
@@ -52,12 +53,16 @@ public class Controller {
     private Label signUpTitle = new Label("Sign up:");
     private Button signUpButtonAccept = new Button("Sign up");
 
-    private Button backToRegAuthButon = new Button("Back");
+    private Button backToRegAuthButtonIn = new Button("Back");
+    private Button backToRegAuthButtonUp = new Button("Back");
+
+    HBox signInButtons = new HBox(signInButtonAccept, backToRegAuthButtonIn);
+    HBox signUpButtons = new HBox(signUpButtonAccept, backToRegAuthButtonUp);
 
     private Label signInUpError = new Label();
 
-    private HBox loginHBox = new HBox(new Label("Login:"), signInUpLogin);
-    private HBox passwordHBox = new HBox(new Label("Password:"), signInUpPassword);
+    Label signInUpLoginText = new Label("Login");
+    Label signInUpPasswordText = new Label("Password");
 
     private WebView webView = new WebView();
     private WebEngine webEngine = webView.getEngine();
@@ -69,58 +74,182 @@ public class Controller {
 
     private VBox userVBox = new VBox();
     static User user;
+    Label userPage = new Label();
 
+    Label friendsLabel = new Label("Friends");
+
+    ArrayList<Label> friendsList = new ArrayList<>();
+//    TitledPane friendsList = new TitledPane();
     static ListView<String> friends = new ListView<>();
 
     @FXML
     ImageView logo;
 
+    private ImageView exitIcon = new ImageView();
+    private ImageView rollIcon = new ImageView();
+
+    private double xOffset = 0;
+    private double yOffset = 0;
+
     @FXML
     protected void initialize() {
-        //mainPane.getStylesheets().add("res/signInButton.css");
-//        signInButton.setStyle("signInButton.css");
+        InitializeStyle();
         ConnectToDatabase();
+        SetHandlers();
+    }
 
+    private void InitializeStyle() {
+        exitIcon.setImage(new Image("res/iconExit.png", 15, 15, false, false));
+        rollIcon.setImage(new Image("res/iconRoll.png", 15, 5, false, false));
+        mainPane.getChildren().addAll(rollIcon, exitIcon);
+        exitIcon.setLayoutX(920);
+        exitIcon.setLayoutY(3);
+        rollIcon.setLayoutX(900);
+        rollIcon.setLayoutY(12);
+        logo.setImage(new Image("res/logo.png"));
+        mainPane.setStyle("-fx-background-image: url(\"res/background.png\");");
+        signInButton.setStyle("-fx-background-color: #6ebb7e");
+        signUpButton.setStyle("-fx-background-color: #7085d1");
+
+        signInTitle.setStyle("-fx-text-fill: #FFFFFF; -fx-font-size: 24px;");
+        signUpTitle.setStyle("-fx-text-fill: #FFFFFF; -fx-font-size: 24px;");
+        signInUpLoginText.setStyle("-fx-text-fill: #FFFFFF; -fx-font-size: 16px;");
+        signInUpPasswordText.setStyle("-fx-text-fill: #FFFFFF; -fx-font-size: 16px;");
+        signInUpError.setStyle("-fx-text-fill: #FFFFFF; -fx-font-size: 16px;");
+
+        signInButtons.setSpacing(20);
+        signInButtonAccept.setStyle("-fx-text-fill: #FFFFFF; -fx-background-color: #6ebb7e;");
+        signUpButtons.setSpacing(20);
+        signUpButtonAccept.setStyle("-fx-text-fill: #FFFFFF; -fx-background-color: #7085d1;");
+        backToRegAuthButtonIn.setStyle("-fx-text-fill: #FFFFFF; -fx-background-color: #f0735e;");
+        backToRegAuthButtonUp.setStyle("-fx-text-fill: #FFFFFF; -fx-background-color: #f0735e;");
+        signInUpLogin.setStyle("-fx-background-color: transparent; -fx-text-fill: #FFFFFF; -fx-border-color: #FFFFFF; -fx-border-width: 1;");
+        signInUpPassword.setStyle("-fx-background-color: transparent; -fx-text-fill: #FFFFFF; -fx-border-color: #FFFFFF; -fx-border-width: 1;");
+
+        friendsLabel.setStyle("-fx-text-fill: #FFFFFF; -fx-font-size: 16px;");
+        userPage.setStyle("-fx-text-fill: #FFFFFF; -fx-font-size: 24px; -fx-font-weight: bold;");
+        userAddFriendButton.setStyle("-fx-text-fill: #FFFFFF; -fx-background-color: #ddcb49; -fx-font-size: 16px;");
+
+//        friendsList.setStyle("-fx-background-color: transparent; -fx-text-fill: #FFFFFF; -fx-border-color: #FFFFFF; -fx-border-width: 1;");
+
+        regAuthVBox.setSpacing(10);
+    }
+
+
+    private void ShowStartupWindow() {
+        regAuthVBox.getChildren().addAll(logo, signInButton, signUpButton);
+    }
+    private void ShowMainWindow() {
+        regAuthVBox.setLayoutX(0);
+        regAuthVBox.setLayoutY(0);
+        regAuthVBox.setPrefWidth(640);
+        regAuthVBox.setPrefHeight(530);
+
+        userVBox.setLayoutY(20);
+        userVBox.setLayoutX(640);
+        userVBox.setPrefWidth(300);
+        userVBox.setPrefHeight(530);
+        userVBox.setSpacing(10);
+        userVBox.setAlignment(Pos.TOP_CENTER);
+
+        userPage.setText("User: " + user.getLogin());
+        userPage.setPadding(new Insets(10, 0, 0, 0));
+//        userPage.setFont(new Font("Arial", 24));
+        userVBox.getChildren().add(userPage);
+
+        friends.setItems(FXCollections.observableList(LoadFriends(user.getFriends())));
+        friendsList = new TitledPane(friendsLabel.getText(), friends);
+        friendsList.setStyle("-fx-background-color: transparent; -fx-text-fill: #FFFFFF; -fx-border-color: #FFFFFF; -fx-border-width: 1;");
+        friendsList.setAnimated(true);
+        friendsList.setExpanded(false);
+
+        userVBox.getChildren().add(friendsList);
+
+        userVBox.getChildren().add(userAddFriendButton);
+
+        mainPane.getChildren().add(userVBox);
+
+        webEngine.load(CreateMapRequest());
+        webView.setContextMenuEnabled(false);
+        regAuthVBox.getChildren().addAll(webView);
+    }
+    private void ShowSignInWindow() {
+        regAuthVBox.setSpacing(10);
+        regAuthVBox.getChildren().add(signInTitle);
+        regAuthVBox.getChildren().add(signInUpLoginText);
+        regAuthVBox.getChildren().add(signInUpLogin);
+        regAuthVBox.getChildren().add(signInUpPasswordText);
+        regAuthVBox.getChildren().add(signInUpPassword);
+
+        regAuthVBox.getChildren().add(signInButtons);
+        regAuthVBox.getChildren().add(signInUpError);
+    }
+    private void ShowSignUpWindow() {
+        regAuthVBox.getChildren().add(signUpTitle);
+        regAuthVBox.getChildren().add(signInUpLoginText);
+        regAuthVBox.getChildren().add(signInUpLogin);
+        regAuthVBox.getChildren().add(signInUpPasswordText);
+        regAuthVBox.getChildren().add(signInUpPassword);
+
+        regAuthVBox.getChildren().add(signUpButtons);
+        regAuthVBox.getChildren().add(signInUpError);
+    }
+
+    private void SetHandlers() {
         signInButton.addEventHandler(MouseEvent.MOUSE_CLICKED, event -> {
             regAuthVBox.getChildren().remove(signInButton);
             regAuthVBox.getChildren().remove(signUpButton);
             regAuthVBox.getChildren().remove(logo);
+            signInUpError.setText("");
+            signInUpLogin.setText("");
+            signInUpPassword.setText("");
 
             ShowSignInWindow();
         });
         signInButtonAccept.addEventHandler(MouseEvent.MOUSE_CLICKED, event -> {
-            String sql;
-            ResultSet resultSet = null;
-            try {
-                statement = connection.createStatement();
+            if(signInUpLogin.getText().isEmpty() || signInUpPassword.getText().isEmpty()) {
+                signInUpError.setText("Incorrect data or no such account!");
+            }
+            else {
+                String sql;
+                ResultSet resultSet = null;
+                try {
+                    statement = connection.createStatement();
 
-                sql = "SELECT * FROM accounts WHERE login = '" + signInUpLogin.getText() + "' AND password = '" + signInUpPassword.getText() + "'";
-                resultSet = statement.executeQuery(sql);
+                    sql = "SELECT * FROM accounts WHERE login = '" + signInUpLogin.getText() + "' AND password = '" + signInUpPassword.getText() + "'";
+                    resultSet = statement.executeQuery(sql);
 
-                assert resultSet != null;
-                if (resultSet.next()) {
-                    regAuthVBox.getChildren().remove(signInButtonAccept);
-                    regAuthVBox.getChildren().remove(loginHBox);
-                    regAuthVBox.getChildren().remove(passwordHBox);
-                    regAuthVBox.getChildren().remove(signInTitle);
-                    regAuthVBox.getChildren().remove(signInUpError);
-                    regAuthVBox.getChildren().remove(backToRegAuthButon);
+                    assert resultSet != null;
+                    if (resultSet.next()) {
+                        regAuthVBox.getChildren().remove(signInTitle);
+                        regAuthVBox.getChildren().remove(signInUpLoginText);
+                        regAuthVBox.getChildren().remove(signInUpLogin);
+                        regAuthVBox.getChildren().remove(signInUpPasswordText);
+                        regAuthVBox.getChildren().remove(signInUpPassword);
+                        regAuthVBox.getChildren().remove(signInButtons);
+                        regAuthVBox.getChildren().remove(signInUpError);
 
-                    LoadUserInfo(resultSet.getInt("id"), resultSet.getString("login"), resultSet.getString("password"), resultSet.getFloat("coordinateX"), resultSet.getFloat("coordinateY"));
-                    ShowMainWindow();
-                } else {
-                    signInUpError.setText("Incorrect data or no such account!");
-                    throw new Exception("MySQL Add to Database error!");
+                        LoadUserInfo(resultSet.getInt("id"), resultSet.getString("login"), resultSet.getString("password"), resultSet.getFloat("coordinateX"), resultSet.getFloat("coordinateY"));
+                        ShowMainWindow();
+                    } else {
+                        signInUpError.setText("Incorrect data or no such account!");
+                        throw new Exception("MySQL Add to Database error!");
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
                 }
-            } catch (Exception e) {
-                e.printStackTrace();
             }
         });
 
-        backToRegAuthButon.addEventHandler(MouseEvent.MOUSE_CLICKED, event -> {
-            regAuthVBox.getChildren().removeAll(signInTitle, signUpTitle, signInButtonAccept, signUpButtonAccept, backToRegAuthButon, loginHBox, passwordHBox, signInUpError);
+        backToRegAuthButtonIn.addEventHandler(MouseEvent.MOUSE_CLICKED, event -> {
+            regAuthVBox.getChildren().removeAll(signInTitle, signUpTitle, signInButtons, signInUpLoginText, signInUpLogin, signInUpPasswordText, signInUpPassword, signInUpError);
             ShowStartupWindow();
         });
+        backToRegAuthButtonUp.addEventHandler(MouseEvent.MOUSE_CLICKED, event -> {
+            regAuthVBox.getChildren().removeAll(signInTitle, signUpTitle, signUpButtons, signInUpLoginText, signInUpLogin, signInUpPasswordText, signInUpPassword, signInUpError);
+            ShowStartupWindow();
+        });
+
         userAddFriendButton.addEventHandler(MouseEvent.MOUSE_CLICKED, event -> {
             Parent root;
             try {
@@ -136,143 +265,84 @@ public class Controller {
             catch (IOException e) {
                 e.printStackTrace();
             }
-
-            webEngine.load("https://goo.gl/maps/prciAcn9z862");
         });
 
         signUpButton.addEventHandler(MouseEvent.MOUSE_CLICKED, event -> {
             regAuthVBox.getChildren().remove(signInButton);
             regAuthVBox.getChildren().remove(signUpButton);
             regAuthVBox.getChildren().remove(logo);
+            signInUpError.setText("");
+            signInUpLogin.setText("");
+            signInUpPassword.setText("");
 
             ShowSignUpWindow();
         });
         signUpButtonAccept.addEventHandler(MouseEvent.MOUSE_CLICKED, event -> {
-            String sql;
-            ResultSet resultSet = null;
-            try {
-                statement = connection.createStatement();
-
-                sql = "SELECT * FROM accounts WHERE login = '" + signInUpLogin.getText() + "'";
-                resultSet = statement.executeQuery(sql);
-                if(resultSet.next()) {
-                    signInUpError.setText("This login is used!");
-                    throw new Exception("MySQL Add to Database error!");
-                }
-
-                sql = "INSERT INTO accounts (login, password) VALUES ('" + signInUpLogin.getText() + "', '" + signInUpPassword.getText() + "')";
-                statement.executeUpdate(sql);
-
-                sql = "SELECT * FROM accounts WHERE login = '" + signInUpLogin.getText() + "'";
-                resultSet = statement.executeQuery(sql);
-
-                assert resultSet != null;
-                if (resultSet.next()) {
-                    regAuthVBox.getChildren().remove(signUpButtonAccept);
-                    regAuthVBox.getChildren().remove(loginHBox);
-                    regAuthVBox.getChildren().remove(passwordHBox);
-                    regAuthVBox.getChildren().remove(signUpTitle);
-                    regAuthVBox.getChildren().remove(signInUpError);
-                    regAuthVBox.getChildren().remove(backToRegAuthButon);
-
-                    SaveUserInfo(resultSet.getInt("id"), resultSet.getString("login"), resultSet.getString("password"), resultSet.getFloat("coordinateX"), resultSet.getFloat("coordinateY"));
-                    ShowMainWindow();
-                } else {
-                    throw new Exception("MySQL Add to Database error!");
-                }
-            } catch (Exception e) {
-                e.printStackTrace();
+            if(signInUpLogin.getText().isEmpty() || signInUpPassword.getText().isEmpty()) {
+                signInUpError.setText("Incorrect data or no such account!");
             }
+            else {
+                String sql;
+                ResultSet resultSet = null;
+                try {
+                    statement = connection.createStatement();
+
+                    sql = "SELECT * FROM accounts WHERE login = '" + signInUpLogin.getText() + "'";
+                    resultSet = statement.executeQuery(sql);
+                    if(resultSet.next()) {
+                        signInUpError.setText("This login is used!");
+                        throw new Exception("MySQL Add to Database error!");
+                    }
+
+                    sql = "INSERT INTO accounts (login, password) VALUES ('" + signInUpLogin.getText() + "', '" + signInUpPassword.getText() + "')";
+                    statement.executeUpdate(sql);
+
+                    sql = "SELECT * FROM accounts WHERE login = '" + signInUpLogin.getText() + "'";
+                    resultSet = statement.executeQuery(sql);
+
+                    assert resultSet != null;
+                    if (resultSet.next()) {
+                        regAuthVBox.getChildren().remove(signUpTitle);
+                        regAuthVBox.getChildren().remove(signInUpLoginText);
+                        regAuthVBox.getChildren().remove(signInUpLogin);
+                        regAuthVBox.getChildren().remove(signInUpPasswordText);
+                        regAuthVBox.getChildren().remove(signInUpPassword);
+                        regAuthVBox.getChildren().remove(signUpButtons);
+                        regAuthVBox.getChildren().remove(signInUpError);
+
+                        SaveUserInfo(resultSet.getInt("id"), resultSet.getString("login"), resultSet.getString("password"), resultSet.getFloat("coordinateX"), resultSet.getFloat("coordinateY"));
+                        ShowMainWindow();
+                    } else {
+                        throw new Exception("MySQL Add to Database error!");
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        });
+
+        exitIcon.addEventHandler(MouseEvent.MOUSE_CLICKED, event -> {
+            System.exit(0);
+        });
+        rollIcon.addEventHandler(MouseEvent.MOUSE_CLICKED, event -> {
+            Stage stage = (Stage) rollIcon.getScene().getWindow();
+            stage.setIconified(true);
+        });
+        exitIcon.addEventHandler(MouseEvent.MOUSE_ENTERED, event -> Main.getPrimaryStage().getScene().setCursor(Cursor.HAND));
+        exitIcon.addEventHandler(MouseEvent.MOUSE_EXITED, event -> Main.getPrimaryStage().getScene().setCursor(Cursor.DEFAULT));
+        rollIcon.addEventHandler(MouseEvent.MOUSE_ENTERED, event -> Main.getPrimaryStage().getScene().setCursor(Cursor.HAND));
+        rollIcon.addEventHandler(MouseEvent.MOUSE_EXITED, event -> Main.getPrimaryStage().getScene().setCursor(Cursor.DEFAULT));
+
+        mainPane.setOnMousePressed(event -> {
+            xOffset = Main.getPrimaryStage().getX() - event.getScreenX();
+            yOffset = Main.getPrimaryStage().getY() - event.getScreenY();
+        });
+        mainPane.setOnMouseDragged(event -> {
+            Main.getPrimaryStage().setX(event.getScreenX() + xOffset);
+            Main.getPrimaryStage().setY(event.getScreenY() + yOffset);
         });
     }
 
-    private void ShowStartupWindow() {
-        regAuthVBox.getChildren().addAll(logo, signInButton, signUpButton);
-    }
-    private void ShowMainWindow() {
-        regAuthVBox.setLayoutX(0);
-        regAuthVBox.setPrefWidth(700);
-
-        userVBox.setLayoutX(700);
-        userVBox.setPrefWidth(300);
-        userVBox.setSpacing(10);
-        userVBox.setAlignment(Pos.CENTER);
-
-        Label userPage = new Label("User: " + user.getLogin());
-        userPage.setPadding(new Insets(10, 0, 0, 0));
-        userPage.setFont(new Font("Arial", 24));
-        userVBox.getChildren().add(userPage);
-
-        friends.setItems(FXCollections.observableList(LoadFriends(user.getFriends())));
-        TitledPane friendsList = new TitledPane("Friends", friends);
-        friendsList.setAnimated(true);
-        friendsList.setExpanded(false);
-
-        userVBox.getChildren().add(friendsList);
-
-        userVBox.getChildren().add(userAddFriendButton);
-
-        mainPane.getChildren().add(userVBox);
-
-        webEngine.load(CreateMapRequest());
-        webView.setContextMenuEnabled(false);
-        regAuthVBox.getChildren().addAll(webView);
-    }
-
-    private String CreateMapRequest() {
-        StringBuilder mapURL = new StringBuilder("https://maps.googleapis.com/maps/api/staticmap?&size=700x550&maptype=roadmap");
-        for(User item : user.getFriends()) {
-            if(!item.getCoordinateX().equals(0.0f)) {
-                mapURL.append("&markers=color:blue%7Clabel:").append(GetIdInList(item.getLogin())).append("%7C").append(item.getCoordinateX()).append(",").append(item.getCoordinateY());
-            }
-        }
-        mapURL.append("&key=AIzaSyDJZqRCFMS5d0eU8K5Sch2mhQYjzqDbgRM");
-        System.out.println(mapURL);
-        return mapURL.toString();
-    }
-
-    private Integer GetIdInList(String name) {
-        Integer count = 1;
-        for(String item : friends.getItems()) {
-            if(item.contains(name))
-                return count;
-            count++;
-        }
-        return -1;
-    }
-
-    private void ShowSignInWindow() {
-        regAuthVBox.getChildren().add(signInTitle);
-
-        loginHBox.setMaxWidth(250);
-        loginHBox.setSpacing(20);
-        loginHBox.setAlignment(Pos.CENTER_LEFT);
-        regAuthVBox.getChildren().add(loginHBox);
-
-        passwordHBox.setMaxWidth(250);
-        passwordHBox.setSpacing(20);
-        passwordHBox.setAlignment(Pos.CENTER_LEFT);
-        regAuthVBox.getChildren().add(passwordHBox);
-
-        regAuthVBox.getChildren().addAll(signInButtonAccept, backToRegAuthButon);
-        regAuthVBox.getChildren().add(signInUpError);
-    }
-    private void ShowSignUpWindow() {
-        regAuthVBox.getChildren().add(signUpTitle);
-
-        loginHBox.setMaxWidth(250);
-        loginHBox.setSpacing(20);
-        loginHBox.setAlignment(Pos.CENTER_LEFT);
-        regAuthVBox.getChildren().add(loginHBox);
-
-        passwordHBox.setMaxWidth(250);
-        passwordHBox.setSpacing(20);
-        passwordHBox.setAlignment(Pos.CENTER_LEFT);
-        regAuthVBox.getChildren().add(passwordHBox);
-
-        regAuthVBox.getChildren().addAll(signUpButtonAccept, backToRegAuthButon);
-        regAuthVBox.getChildren().add(signInUpError);
-    }
     private void SaveUserInfo(Integer id, String login, String password, Float x, Float y) {
         user = new User(id, login, password);
         user.setCoordinateX(x);
@@ -305,6 +375,7 @@ public class Controller {
             e.printStackTrace();
         }
     }
+
     private void ConnectToDatabase() {
         try {
             Class.forName("com.mysql.cj.jdbc.Driver").getDeclaredConstructor().newInstance();
@@ -315,7 +386,27 @@ public class Controller {
             System.out.println(ex);
         }
     }
-    public static List<String> LoadFriends(List<User> list) {
+    private String CreateMapRequest() {
+        StringBuilder mapURL = new StringBuilder("https://maps.googleapis.com/maps/api/staticmap?&size=700x550&maptype=roadmap");
+        for(User item : user.getFriends()) {
+            if(!item.getCoordinateX().equals(0.0f)) {
+                mapURL.append("&markers=color:blue%7Clabel:").append(GetIdInList(item.getLogin())).append("%7C").append(item.getCoordinateX()).append(",").append(item.getCoordinateY());
+            }
+        }
+        mapURL.append("&key=AIzaSyDJZqRCFMS5d0eU8K5Sch2mhQYjzqDbgRM");
+        System.out.println(mapURL);
+        return mapURL.toString();
+    }
+    private Integer GetIdInList(String name) {
+        Integer count = 1;
+        for(String item : friends.getItems()) {
+            if(item.contains(name))
+                return count;
+            count++;
+        }
+        return -1;
+    }
+    static List<String> LoadFriends(List<User> list) {
         List<String> newList = new ArrayList<>();
         Integer num = 1;
         for (User item : list) {
