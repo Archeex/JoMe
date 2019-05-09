@@ -45,17 +45,28 @@ public class AddFriendController {
         mainPane.getChildren().addAll(mainBox);
 
         searchButton.addEventHandler(MouseEvent.MOUSE_CLICKED, event -> {
+            for(User item : Controller.user.getFriends()) {
+                try {
+                    if(Objects.equals(loginField.getText(), item.getLogin())) {
+                        errorField.setText("This user already added to your friendslist!");
+                        throw new Exception("This user already added to your friendslist!");
+                    }
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                    return;
+                }
+            }
             String sql;
             ResultSet resultSet = null;
             try {
                 statement = Controller.connection.createStatement();
 
-                sql = "SELECT * FROM accounts WHERE id = '" + loginField.getText() + "'";
+                sql = "SELECT * FROM accounts WHERE login = '" + loginField.getText() + "'";
                 resultSet = statement.executeQuery(sql);
                 if(resultSet.next()) {
                     Integer tempId = resultSet.getInt("id");
                     if(!Objects.equals(tempId, Controller.user.getId())) {
-                        Controller.user.addFriend(Integer.valueOf(loginField.getText()));
+                        Controller.user.addFriend(tempId);
                         errorField.setText("Friend was added!");
                         Controller.friends.setItems(FXCollections.observableList(Controller.LoadFriends(Controller.user.getFriends())));
                     }

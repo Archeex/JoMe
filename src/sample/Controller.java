@@ -1,11 +1,13 @@
 package sample;
 
 import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Cursor;
+import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
@@ -19,9 +21,8 @@ import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
-import javafx.scene.layout.HBox;
-import javafx.scene.layout.Pane;
-import javafx.scene.layout.VBox;
+import javafx.scene.layout.*;
+import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.scene.web.WebEngine;
 import javafx.scene.web.WebView;
@@ -77,7 +78,7 @@ public class Controller {
     Label userPage = new Label();
 
     Label friendsLabel = new Label("Friends");
-
+    ScrollPane friendsPane = new ScrollPane();
     ArrayList<Label> friendsList = new ArrayList<>();
 //    TitledPane friendsList = new TitledPane();
     static ListView<String> friends = new ListView<>();
@@ -111,8 +112,8 @@ public class Controller {
         signInButton.setStyle("-fx-background-color: #6ebb7e");
         signUpButton.setStyle("-fx-background-color: #7085d1");
 
-        signInTitle.setStyle("-fx-text-fill: #FFFFFF; -fx-font-size: 24px;");
-        signUpTitle.setStyle("-fx-text-fill: #FFFFFF; -fx-font-size: 24px;");
+        signInTitle.setStyle("-fx-text-fill: #FFFFFF; -fx-font-size: 24px; -fx-font-weight: bold;");
+        signUpTitle.setStyle("-fx-text-fill: #FFFFFF; -fx-font-size: 24px; -fx-font-weight: bold;");
         signInUpLoginText.setStyle("-fx-text-fill: #FFFFFF; -fx-font-size: 16px;");
         signInUpPasswordText.setStyle("-fx-text-fill: #FFFFFF; -fx-font-size: 16px;");
         signInUpError.setStyle("-fx-text-fill: #FFFFFF; -fx-font-size: 16px;");
@@ -157,13 +158,18 @@ public class Controller {
 //        userPage.setFont(new Font("Arial", 24));
         userVBox.getChildren().add(userPage);
 
-        friends.setItems(FXCollections.observableList(LoadFriends(user.getFriends())));
-        friendsList = new TitledPane(friendsLabel.getText(), friends);
-        friendsList.setStyle("-fx-background-color: transparent; -fx-text-fill: #FFFFFF; -fx-border-color: #FFFFFF; -fx-border-width: 1;");
-        friendsList.setAnimated(true);
-        friendsList.setExpanded(false);
-
-        userVBox.getChildren().add(friendsList);
+        SetFriendsList();
+        VBox friendsVBox = new VBox();
+        friendsVBox.setSpacing(5);
+        for(Label item : friendsList) {
+            friendsVBox.getChildren().add(item);
+        }
+        friendsPane.setContent(friendsVBox);
+//        friendsPane.setBackground(new Background(new BackgroundFill(Color.TRANSPARENT, null, null)));
+        friendsPane.setStyle("-fx-background: transparent; -fx-background-color: transparent; -fx-border-color: transparent ; -fx-hbar-policy: never; -fx-vbar-policy : never; -fx-background-insets: 0;");
+        friendsPane.setPrefViewportHeight(400);
+//        friendsPane.setDisable(true);
+        userVBox.getChildren().add(friendsPane);
 
         userVBox.getChildren().add(userAddFriendButton);
 
@@ -173,6 +179,27 @@ public class Controller {
         webView.setContextMenuEnabled(false);
         regAuthVBox.getChildren().addAll(webView);
     }
+
+    private void SetFriendsList() {
+        ArrayList<String> list = new ArrayList<>(FXCollections.observableList(LoadFriends(user.getFriends())));
+        for(String item: list) {
+            Label label = new Label(item);
+            label.setStyle("-fx-background-color: transparent; -fx-text-fill: #FFFFFF; -fx-border-color: #FFFFFF; -fx-border-width: 1; -fx-font-size: 14px;");
+            label.setPrefWidth(295);
+            label.setPrefHeight(40);
+            label.setPadding(new Insets(0, 0, 0, 10));
+            label.addEventHandler(MouseEvent.MOUSE_ENTERED, event -> {
+                Main.getPrimaryStage().getScene().setCursor(Cursor.HAND);
+                label.setStyle("-fx-border-color: #ddcb49; -fx-font-size: 14px;");
+            });
+            label.addEventHandler(MouseEvent.MOUSE_EXITED, event -> {
+                Main.getPrimaryStage().getScene().setCursor(Cursor.DEFAULT);
+                label.setStyle("-fx-border-color: #FFFFFF; -fx-font-size: 14px;");
+            });
+            friendsList.add(label);
+        }
+    }
+
     private void ShowSignInWindow() {
         regAuthVBox.setSpacing(10);
         regAuthVBox.getChildren().add(signInTitle);
@@ -229,7 +256,7 @@ public class Controller {
                         regAuthVBox.getChildren().remove(signInButtons);
                         regAuthVBox.getChildren().remove(signInUpError);
 
-                        LoadUserInfo(resultSet.getInt("id"), resultSet.getString("login"), resultSet.getString("password"), resultSet.getFloat("coordinateX"), resultSet.getFloat("coordinateY"));
+                        LoadUserInfo(resultSet.getInt("id"), resultSet.getString("login"), resultSet.getString("password"), resultSet.getString("coordinateX"), resultSet.getString("coordinateY"));
                         ShowMainWindow();
                     } else {
                         signInUpError.setText("Incorrect data or no such account!");
@@ -310,7 +337,7 @@ public class Controller {
                         regAuthVBox.getChildren().remove(signUpButtons);
                         regAuthVBox.getChildren().remove(signInUpError);
 
-                        SaveUserInfo(resultSet.getInt("id"), resultSet.getString("login"), resultSet.getString("password"), resultSet.getFloat("coordinateX"), resultSet.getFloat("coordinateY"));
+                        SaveUserInfo(resultSet.getInt("id"), resultSet.getString("login"), resultSet.getString("password"), resultSet.getString("coordinateX"), resultSet.getString("coordinateY"));
                         ShowMainWindow();
                     } else {
                         throw new Exception("MySQL Add to Database error!");
@@ -343,12 +370,12 @@ public class Controller {
         });
     }
 
-    private void SaveUserInfo(Integer id, String login, String password, Float x, Float y) {
+    private void SaveUserInfo(Integer id, String login, String password, String x, String y) {
         user = new User(id, login, password);
         user.setCoordinateX(x);
         user.setCoordinateY(y);
     }
-    private void LoadUserInfo(Integer id, String login, String password, Float x, Float y) {
+    private void LoadUserInfo(Integer id, String login, String password, String x, String y) {
         user = new User(id, login, password);
         user.setCoordinateX(x);
         user.setCoordinateY(y);
@@ -375,7 +402,6 @@ public class Controller {
             e.printStackTrace();
         }
     }
-
     private void ConnectToDatabase() {
         try {
             Class.forName("com.mysql.cj.jdbc.Driver").getDeclaredConstructor().newInstance();
@@ -386,10 +412,20 @@ public class Controller {
             System.out.println(ex);
         }
     }
+    static List<String> LoadFriends(List<User> list) {
+        List<String> newList = new ArrayList<>();
+        Integer num = 1;
+        for (User item : list) {
+//            newList.add(num++ + ": " + item.getLogin());
+            newList.add(item.getLogin());
+        }
+        return newList;
+    }
+
     private String CreateMapRequest() {
         StringBuilder mapURL = new StringBuilder("https://maps.googleapis.com/maps/api/staticmap?&size=700x550&maptype=roadmap");
         for(User item : user.getFriends()) {
-            if(!item.getCoordinateX().equals(0.0f)) {
+            if(!item.getCoordinateX().equals("0")) {
                 mapURL.append("&markers=color:blue%7Clabel:").append(GetIdInList(item.getLogin())).append("%7C").append(item.getCoordinateX()).append(",").append(item.getCoordinateY());
             }
         }
@@ -405,14 +441,6 @@ public class Controller {
             count++;
         }
         return -1;
-    }
-    static List<String> LoadFriends(List<User> list) {
-        List<String> newList = new ArrayList<>();
-        Integer num = 1;
-        for (User item : list) {
-            newList.add(num++ + ": " + item.getLogin());
-        }
-        return newList;
     }
 
     @Deprecated
