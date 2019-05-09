@@ -1,6 +1,6 @@
 
-.idea
-out
+.idea/
+out/
 .gitattributes
 *.iml
 *.log
