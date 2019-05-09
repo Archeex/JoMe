@@ -6,10 +6,7 @@ import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
-import javafx.scene.Cursor;
-import javafx.scene.Node;
-import javafx.scene.Parent;
-import javafx.scene.Scene;
+import javafx.scene.*;
 import javafx.scene.control.*;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
@@ -27,6 +24,7 @@ import javafx.scene.text.Font;
 import javafx.scene.web.WebEngine;
 import javafx.scene.web.WebView;
 import javafx.stage.Stage;
+import javafx.stage.StageStyle;
 
 public class Controller {
 
@@ -91,6 +89,8 @@ public class Controller {
 
     private double xOffset = 0;
     private double yOffset = 0;
+
+    static Stage stage;
 
     @FXML
     protected void initialize() {
@@ -191,6 +191,7 @@ public class Controller {
             label.addEventHandler(MouseEvent.MOUSE_ENTERED, event -> {
                 Main.getPrimaryStage().getScene().setCursor(Cursor.HAND);
                 label.setStyle("-fx-border-color: #ddcb49; -fx-font-size: 14px;");
+                label.setTooltip(new Tooltip("Some address here.. Soon.")); //TODO
             });
             label.addEventHandler(MouseEvent.MOUSE_EXITED, event -> {
                 Main.getPrimaryStage().getScene().setCursor(Cursor.DEFAULT);
@@ -282,9 +283,10 @@ public class Controller {
             try {
                 root = FXMLLoader.load(getClass().getResource("addFriend.fxml"));
                 //AddFriendController addFriendController = new AddFriendController(user, connection, statement);
-                Stage stage = new Stage();
+                stage = new Stage();
                 stage.setTitle("JoMe / Add friend");
                 stage.setScene(new Scene(root, 450, 250));
+                stage.initStyle(StageStyle.UNDECORATED);
                 stage.show();
                 // Hide this current window (if this is what you want)
                 //((Node)(event.getSource())).getScene().getWindow().hide();
@@ -368,6 +370,21 @@ public class Controller {
             Main.getPrimaryStage().setX(event.getScreenX() + xOffset);
             Main.getPrimaryStage().setY(event.getScreenY() + yOffset);
         });
+
+        signInButton.addEventHandler(MouseEvent.MOUSE_ENTERED, event -> Main.getPrimaryStage().getScene().setCursor(Cursor.HAND));
+        signInButton.addEventHandler(MouseEvent.MOUSE_EXITED, event -> Main.getPrimaryStage().getScene().setCursor(Cursor.DEFAULT));
+        signUpButton.addEventHandler(MouseEvent.MOUSE_ENTERED, event -> Main.getPrimaryStage().getScene().setCursor(Cursor.HAND));
+        signUpButton.addEventHandler(MouseEvent.MOUSE_EXITED, event -> Main.getPrimaryStage().getScene().setCursor(Cursor.DEFAULT));
+        signInButtonAccept.addEventHandler(MouseEvent.MOUSE_ENTERED, event -> Main.getPrimaryStage().getScene().setCursor(Cursor.HAND));
+        signInButtonAccept.addEventHandler(MouseEvent.MOUSE_EXITED, event -> Main.getPrimaryStage().getScene().setCursor(Cursor.DEFAULT));
+        signUpButtonAccept.addEventHandler(MouseEvent.MOUSE_ENTERED, event -> Main.getPrimaryStage().getScene().setCursor(Cursor.HAND));
+        signUpButtonAccept.addEventHandler(MouseEvent.MOUSE_EXITED, event -> Main.getPrimaryStage().getScene().setCursor(Cursor.DEFAULT));
+        backToRegAuthButtonIn.addEventHandler(MouseEvent.MOUSE_ENTERED, event -> Main.getPrimaryStage().getScene().setCursor(Cursor.HAND));
+        backToRegAuthButtonIn.addEventHandler(MouseEvent.MOUSE_EXITED, event -> Main.getPrimaryStage().getScene().setCursor(Cursor.DEFAULT));
+        backToRegAuthButtonUp.addEventHandler(MouseEvent.MOUSE_ENTERED, event -> Main.getPrimaryStage().getScene().setCursor(Cursor.HAND));
+        backToRegAuthButtonUp.addEventHandler(MouseEvent.MOUSE_EXITED, event -> Main.getPrimaryStage().getScene().setCursor(Cursor.DEFAULT));
+        userAddFriendButton.addEventHandler(MouseEvent.MOUSE_ENTERED, event -> Main.getPrimaryStage().getScene().setCursor(Cursor.HAND));
+        userAddFriendButton.addEventHandler(MouseEvent.MOUSE_EXITED, event -> Main.getPrimaryStage().getScene().setCursor(Cursor.DEFAULT));
     }
 
     private void SaveUserInfo(Integer id, String login, String password, String x, String y) {
