@@ -13,6 +13,7 @@ import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseEvent;
 
 import java.io.IOException;
+import java.lang.Float;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
@@ -69,12 +70,14 @@ public class Controller {
     private VBox userVBox = new VBox();
     static User user;
 
+    static ListView<String> friends = new ListView<>();
+
     @FXML
     ImageView logo;
 
     @FXML
     protected void initialize() {
-        mainPane.getStylesheets().add("res/signInButton.css");
+        //mainPane.getStylesheets().add("res/signInButton.css");
 //        signInButton.setStyle("signInButton.css");
         ConnectToDatabase();
 
@@ -103,7 +106,7 @@ public class Controller {
                     regAuthVBox.getChildren().remove(signInUpError);
                     regAuthVBox.getChildren().remove(backToRegAuthButon);
 
-                    SaveUserInfo(resultSet.getInt("id"), resultSet.getString("login"), resultSet.getString("password"));
+                    LoadUserInfo(resultSet.getInt("id"), resultSet.getString("login"), resultSet.getString("password"), resultSet.getFloat("coordinateX"), resultSet.getFloat("coordinateY"));
                     ShowMainWindow();
                 } else {
                     signInUpError.setText("Incorrect data or no such account!");
@@ -172,7 +175,7 @@ public class Controller {
                     regAuthVBox.getChildren().remove(signInUpError);
                     regAuthVBox.getChildren().remove(backToRegAuthButon);
 
-                    SaveUserInfo(resultSet.getInt("id"), resultSet.getString("login"), resultSet.getString("password"));
+                    SaveUserInfo(resultSet.getInt("id"), resultSet.getString("login"), resultSet.getString("password"), resultSet.getFloat("coordinateX"), resultSet.getFloat("coordinateY"));
                     ShowMainWindow();
                 } else {
                     throw new Exception("MySQL Add to Database error!");
@@ -195,13 +198,12 @@ public class Controller {
         userVBox.setSpacing(10);
         userVBox.setAlignment(Pos.CENTER);
 
-        Label userPage = new Label("User: " + user.getLogin() + "#" + user.getId());
+        Label userPage = new Label("User: " + user.getLogin());
         userPage.setPadding(new Insets(10, 0, 0, 0));
         userPage.setFont(new Font("Arial", 24));
         userVBox.getChildren().add(userPage);
 
-        ListView<String> friends = new ListView<>();
-        friends.setItems(FXCollections.observableList(user.getFriends()));
+        friends.setItems(FXCollections.observableList(LoadFriends(user.getFriends())));
         TitledPane friendsList = new TitledPane("Friends", friends);
         friendsList.setAnimated(true);
         friendsList.setExpanded(false);
@@ -212,10 +214,33 @@ public class Controller {
 
         mainPane.getChildren().add(userVBox);
 
-        webEngine.load("https://www.google.com/maps");
-
+        webEngine.load(CreateMapRequest());
+        webView.setContextMenuEnabled(false);
         regAuthVBox.getChildren().addAll(webView);
     }
+
+    private String CreateMapRequest() {
+        StringBuilder mapURL = new StringBuilder("https://maps.googleapis.com/maps/api/staticmap?&size=700x550&maptype=roadmap");
+        for(User item : user.getFriends()) {
+            if(!item.getCoordinateX().equals(0.0f)) {
+                mapURL.append("&markers=color:blue%7Clabel:").append(GetIdInList(item.getLogin())).append("%7C").append(item.getCoordinateX()).append(",").append(item.getCoordinateY());
+            }
+        }
+        mapURL.append("&key=AIzaSyDJZqRCFMS5d0eU8K5Sch2mhQYjzqDbgRM");
+        System.out.println(mapURL);
+        return mapURL.toString();
+    }
+
+    private Integer GetIdInList(String name) {
+        Integer count = 1;
+        for(String item : friends.getItems()) {
+            if(item.contains(name))
+                return count;
+            count++;
+        }
+        return -1;
+    }
+
     private void ShowSignInWindow() {
         regAuthVBox.getChildren().add(signInTitle);
 
@@ -248,8 +273,37 @@ public class Controller {
         regAuthVBox.getChildren().addAll(signUpButtonAccept, backToRegAuthButon);
         regAuthVBox.getChildren().add(signInUpError);
     }
-    private void SaveUserInfo(Integer id, String login, String password) {
+    private void SaveUserInfo(Integer id, String login, String password, Float x, Float y) {
         user = new User(id, login, password);
+        user.setCoordinateX(x);
+        user.setCoordinateY(y);
+    }
+    private void LoadUserInfo(Integer id, String login, String password, Float x, Float y) {
+        user = new User(id, login, password);
+        user.setCoordinateX(x);
+        user.setCoordinateY(y);
+
+        String sql;
+        ResultSet resultSet = null;
+        String friends;
+        try {
+            statement = connection.createStatement();
+            sql = "SELECT * FROM accounts WHERE id = '" + id + "'";
+            resultSet = statement.executeQuery(sql);
+            if (resultSet.next()) {
+                friends = resultSet.getString("friends");
+                if(!friends.isEmpty()) {
+                    for(String str : friends.split(",")) {
+                        user.addFriend(Integer.valueOf(str));
+                    }
+                }
+                else {
+                    throw new Exception("No friends :(");
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
     private void ConnectToDatabase() {
         try {
@@ -261,7 +315,34 @@ public class Controller {
             System.out.println(ex);
         }
     }
-//    private List<String> LoadFriendsById(List<Integer> list) {
-//        return user.getFriends();
-//    }
+    public static List<String> LoadFriends(List<User> list) {
+        List<String> newList = new ArrayList<>();
+        Integer num = 1;
+        for (User item : list) {
+            newList.add(num++ + ": " + item.getLogin());
+        }
+        return newList;
+    }
+
+    @Deprecated
+    private List<String> LoadFriendsById(List<Integer> list) {
+        List<String> newList = new ArrayList<>();
+        for (Integer item : list) {
+            String sql;
+            ResultSet resultSet = null;
+            try {
+                statement = connection.createStatement();
+
+                sql = "SELECT * FROM accounts WHERE id = '" + item + "'";
+                resultSet = statement.executeQuery(sql);
+
+                assert resultSet != null;
+                if (resultSet.next())
+                    newList.add(resultSet.getString("login"));
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+        return newList;
+    }
 }
