@@ -94,9 +94,9 @@ public class Controller {
 
     @FXML
     protected void initialize() {
-        InitializeStyle();
         ConnectToDatabase();
         SetHandlers();
+        InitializeStyle();
     }
 
     private void InitializeStyle() {

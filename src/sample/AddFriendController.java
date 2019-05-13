@@ -104,7 +104,7 @@ public class AddFriendController {
         mainBox.setAlignment(Pos.CENTER);
         mainBox.setPrefWidth(450);
         mainBox.setPrefHeight(250);
-        mainBox.setSpacing(10);
+        mainBox.setSpacing(25);
         mainPane.getChildren().addAll(mainBox);
         mainPane.getChildren().addAll(exitIcon);
         exitIcon.setLayoutX(430);
