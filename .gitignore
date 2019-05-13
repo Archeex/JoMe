@@ -4,3 +4,6 @@ out/
 .gitattributes
 *.iml
 *.log
+*.iml
+*.MF
+JoMe.iml
