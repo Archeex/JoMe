@@ -20,6 +20,8 @@ public class User {
     private String login = null;
     private String password = null;
     private List<User> friendsList = new ArrayList<>();
+    private String placeName;
+    private String placeData;
     private String coordinateX;
     private String coordinateY;
 
@@ -42,6 +44,8 @@ public class User {
                 newFriend.setCoordinateX(resultSet.getString("coordinateX"));
                 System.out.println(resultSet.getString("coordinateX"));
                 newFriend.setCoordinateY(resultSet.getString("coordinateY"));
+                newFriend.setPlaceName(resultSet.getString("placeName"));
+                newFriend.setPlaceData(resultSet.getString("placeData"));
                 friendsList.add(newFriend);
                 StringBuilder friends = new StringBuilder();
                 for(User item : friendsList) {
@@ -92,5 +96,43 @@ public class User {
     }
     void setCoordinateY(String coordinateY) {
         this.coordinateY = coordinateY;
+    }
+
+    public String getPlaceName() {
+        return placeName;
+    }
+
+    public void setPlaceName(String placeName) {
+        this.placeName = placeName;
+    }
+
+    public String getPlaceData() {
+        return placeData;
+    }
+
+    public void setPlaceData(String placeData) {
+        this.placeData = placeData;
+    }
+
+    void savePlace() {
+        String sql;
+        ResultSet resultSet = null;
+        try {
+            Statement statement = connection.createStatement();
+            sql = "SELECT * FROM accounts WHERE id = '" + id + "'";
+            resultSet = statement.executeQuery(sql);
+            assert resultSet != null;
+            if (resultSet.next()) {
+                sql = "UPDATE accounts SET placeName = '" + placeName.replace("'", "\\'") +
+                        "', placeData = '" + placeData.replace("'", "\\'") +
+                        "', coordinateX = '" + coordinateX + "', coordinateY = '" + coordinateY + "' WHERE id = '" + id + "'";
+//                sql = "UPDATE accounts SET placeName = '" + placeName + "' WHERE id = '" + Controller.user.getId() + "'"; // + "', placeData = '" + placeData
+                statement.executeUpdate(sql);
+            } else {
+                throw new Exception("MySQL Add Place error!");
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 }

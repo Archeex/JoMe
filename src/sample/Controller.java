@@ -2,6 +2,7 @@ package sample;
 
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.concurrent.Worker;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.geometry.Insets;
@@ -13,10 +14,11 @@ import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseEvent;
 
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.lang.Float;
+import java.nio.charset.StandardCharsets;
 import java.sql.*;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
@@ -55,13 +57,13 @@ public class Controller {
     private Button backToRegAuthButtonIn = new Button("Back");
     private Button backToRegAuthButtonUp = new Button("Back");
 
-    HBox signInButtons = new HBox(signInButtonAccept, backToRegAuthButtonIn);
-    HBox signUpButtons = new HBox(signUpButtonAccept, backToRegAuthButtonUp);
+    private HBox signInButtons = new HBox(signInButtonAccept, backToRegAuthButtonIn);
+    private HBox signUpButtons = new HBox(signUpButtonAccept, backToRegAuthButtonUp);
 
     private Label signInUpError = new Label();
 
-    Label signInUpLoginText = new Label("Login");
-    Label signInUpPasswordText = new Label("Password");
+    private Label signInUpLoginText = new Label("Login");
+    private Label signInUpPasswordText = new Label("Password");
 
     private WebView webView = new WebView();
     private WebEngine webEngine = webView.getEngine();
@@ -70,14 +72,19 @@ public class Controller {
     private Statement statement = null;
 
     private Button userAddFriendButton = new Button("Add friend");
+    private Button setCoordinatesButton = new Button("Set geolocation");
+    private Button setCoordinatesButtonAccept = new Button("Set");
+    private Button setCoordinatesButtonCancel = new Button("Cancel");
+    private HBox mainWindowButtons = new HBox(userAddFriendButton, setCoordinatesButton);
 
     private VBox userVBox = new VBox();
     static User user;
-    Label userPage = new Label();
+    private Label userPage = new Label();
 
-    Label friendsLabel = new Label("Friends");
-    ScrollPane friendsPane = new ScrollPane();
-    ArrayList<Label> friendsList = new ArrayList<>();
+    private Label friendsLabel = new Label("Friends");
+    private ScrollPane friendsPane = new ScrollPane();
+    private ArrayList<Label> friendsList = new ArrayList<>();
+    private VBox friendsVBox = new VBox();
 //    TitledPane friendsList = new TitledPane();
     static ListView<String> friends = new ListView<>();
 
@@ -94,19 +101,20 @@ public class Controller {
 
     @FXML
     protected void initialize() {
+        System.setProperty("sun.net.http.allowRestrictedHeaders", "true");
         ConnectToDatabase();
         SetHandlers();
         InitializeStyle();
     }
 
     private void InitializeStyle() {
-        exitIcon.setImage(new Image("res/iconExit.png", 15, 15, false, false));
-        rollIcon.setImage(new Image("res/iconRoll.png", 15, 5, false, false));
+        exitIcon.setImage(new Image("res/iconExit.png"));
+        rollIcon.setImage(new Image("res/iconRoll.png"));
         mainPane.getChildren().addAll(rollIcon, exitIcon);
         exitIcon.setLayoutX(920);
-        exitIcon.setLayoutY(3);
+        exitIcon.setLayoutY(8);
         rollIcon.setLayoutX(900);
-        rollIcon.setLayoutY(12);
+        rollIcon.setLayoutY(17);
         logo.setImage(new Image("res/logo.png"));
         mainPane.setStyle("-fx-background-image: url(\"res/background.png\");");
         signInButton.setStyle("-fx-background-color: #6ebb7e");
@@ -129,7 +137,10 @@ public class Controller {
 
         friendsLabel.setStyle("-fx-text-fill: #FFFFFF; -fx-font-size: 16px;");
         userPage.setStyle("-fx-text-fill: #FFFFFF; -fx-font-size: 24px; -fx-font-weight: bold;");
-        userAddFriendButton.setStyle("-fx-text-fill: #FFFFFF; -fx-background-color: #ddcb49; -fx-font-size: 16px;");
+        userAddFriendButton.setStyle("-fx-text-fill: #FFFFFF; -fx-background-color: #7085d1; -fx-font-size: 14px;");
+        setCoordinatesButton.setStyle("-fx-text-fill: #FFFFFF; -fx-background-color: #7085d1; -fx-font-size: 14px;");
+        setCoordinatesButtonAccept.setStyle("-fx-text-fill: #FFFFFF; -fx-background-color: #6ebb7e; -fx-font-size: 14px;");
+        setCoordinatesButtonCancel.setStyle("-fx-text-fill: #FFFFFF; -fx-background-color: #f0735e; -fx-font-size: 14px;");
 
 //        friendsList.setStyle("-fx-background-color: transparent; -fx-text-fill: #FFFFFF; -fx-border-color: #FFFFFF; -fx-border-width: 1;");
 
@@ -159,43 +170,65 @@ public class Controller {
         userVBox.getChildren().add(userPage);
 
         SetFriendsList();
-        VBox friendsVBox = new VBox();
+        SetFriendsUI();
         friendsVBox.setSpacing(5);
-        for(Label item : friendsList) {
-            friendsVBox.getChildren().add(item);
-        }
         friendsPane.setContent(friendsVBox);
+        userVBox.getChildren().add(friendsPane);
 //        friendsPane.setBackground(new Background(new BackgroundFill(Color.TRANSPARENT, null, null)));
         friendsPane.setStyle("-fx-background: transparent; -fx-background-color: transparent; -fx-border-color: transparent ; -fx-hbar-policy: never; -fx-vbar-policy : never; -fx-background-insets: 0;");
         friendsPane.setPrefViewportHeight(400);
 //        friendsPane.setDisable(true);
-        userVBox.getChildren().add(friendsPane);
+        mainWindowButtons.setAlignment(Pos.CENTER);
+        mainWindowButtons.setSpacing(30);
 
-        userVBox.getChildren().add(userAddFriendButton);
+        userVBox.getChildren().add(mainWindowButtons);
 
         mainPane.getChildren().add(userVBox);
-
-        webEngine.load(CreateMapRequest());
-        webView.setContextMenuEnabled(false);
+        String mapRequest = CreateMapRequest();
+        if(!Objects.equals(mapRequest, "InvalidMap"))
+            webEngine.load(mapRequest);
+        else
+            webEngine.load("https://www.google.com/maps");
+        //webView.setContextMenuEnabled(false);
         regAuthVBox.getChildren().addAll(webView);
     }
 
+    private void SetFriendsUI() {
+        for(Label item : friendsList) {
+            friendsVBox.getChildren().add(item);
+        }
+    }
+
     private void SetFriendsList() {
-        ArrayList<String> list = new ArrayList<>(FXCollections.observableList(LoadFriends(user.getFriends())));
-        for(String item: list) {
-            Label label = new Label(item);
+//        ArrayList<String> list = new ArrayList<>(FXCollections.observableList(LoadFriends(user.getFriends())));
+        Integer num = 1;
+        ArrayList<User> listUsers = new ArrayList<>(FXCollections.observableList(user.getFriends()));
+        for(User item: listUsers) {
+            Label label = new Label(num++ + ": " + item.getLogin());
             label.setStyle("-fx-background-color: transparent; -fx-text-fill: #FFFFFF; -fx-border-color: #FFFFFF; -fx-border-width: 1; -fx-font-size: 14px;");
             label.setPrefWidth(295);
             label.setPrefHeight(40);
             label.setPadding(new Insets(0, 0, 0, 10));
             label.addEventHandler(MouseEvent.MOUSE_ENTERED, event -> {
                 Main.getPrimaryStage().getScene().setCursor(Cursor.HAND);
-                label.setStyle("-fx-border-color: #ddcb49; -fx-font-size: 14px;");
-                label.setTooltip(new Tooltip("Some address here.. Soon.")); //TODO
+                label.setStyle("-fx-border-color: #7085d1; -fx-font-size: 14px;");
+                if(!Objects.equals(item.getPlaceName(), "None"))
+                    label.setTooltip(new Tooltip(item.getPlaceName())); //TODO
             });
             label.addEventHandler(MouseEvent.MOUSE_EXITED, event -> {
                 Main.getPrimaryStage().getScene().setCursor(Cursor.DEFAULT);
                 label.setStyle("-fx-border-color: #FFFFFF; -fx-font-size: 14px;");
+            });
+            label.addEventHandler(MouseEvent.MOUSE_CLICKED, event -> {
+                if(!Objects.equals(item.getPlaceData(), "None"))
+                    webEngine.load("https://www.google.com/maps/place/" + item.getPlaceData());
+                else {
+                    String mapRequest = CreateMapRequest();
+                    if (!Objects.equals(mapRequest, "InvalidMap"))
+                        webEngine.load(mapRequest);
+                    else
+                        webEngine.load("https://www.google.com/maps/");
+                }
             });
             friendsList.add(label);
         }
@@ -277,7 +310,35 @@ public class Controller {
             regAuthVBox.getChildren().removeAll(signInTitle, signUpTitle, signUpButtons, signInUpLoginText, signInUpLogin, signInUpPasswordText, signInUpPassword, signInUpError);
             ShowStartupWindow();
         });
+        setCoordinatesButton.addEventHandler(MouseEvent.MOUSE_CLICKED, event -> {
+            webEngine.load("https://www.google.com/maps");
+            mainWindowButtons.getChildren().remove(setCoordinatesButton);
+            mainWindowButtons.getChildren().addAll(setCoordinatesButtonCancel, setCoordinatesButtonAccept);
+        });
+        setCoordinatesButtonCancel.addEventHandler(MouseEvent.MOUSE_CLICKED, event -> {
+            String mapRequest = CreateMapRequest();
+            if(!Objects.equals(mapRequest, "InvalidMap"))
+                webEngine.load(mapRequest);
+            else
+                webEngine.load("https://www.google.com/maps");
+            mainWindowButtons.getChildren().removeAll(setCoordinatesButtonCancel, setCoordinatesButtonAccept);
+            mainWindowButtons.getChildren().add(setCoordinatesButton);
+        });
+        setCoordinatesButtonAccept.addEventHandler(MouseEvent.MOUSE_CLICKED, event -> {
+            webEngine.reload();
+            try {
+                String result = java.net.URLDecoder.decode(webEngine.getLocation().split("/")[5], StandardCharsets.UTF_8.name());
+                user.setPlaceName(result);
+            } catch (UnsupportedEncodingException ignored) {}
+            user.setPlaceData(webEngine.getLocation().split("/")[7]);
+            user.setCoordinateX(webEngine.getLocation().split("/")[7].split("!")[5].substring(2));
+            user.setCoordinateY(webEngine.getLocation().split("/")[7].split("!")[6].substring(2));
+            System.out.println(user.getCoordinateX() + " " + user.getCoordinateY());
+            user.savePlace();
 
+            mainWindowButtons.getChildren().removeAll(setCoordinatesButtonCancel, setCoordinatesButtonAccept);
+            mainWindowButtons.getChildren().add(setCoordinatesButton);
+        });
         userAddFriendButton.addEventHandler(MouseEvent.MOUSE_CLICKED, event -> {
             Parent root;
             try {
@@ -288,6 +349,20 @@ public class Controller {
                 stage.setScene(new Scene(root, 450, 250));
                 stage.initStyle(StageStyle.UNDECORATED);
                 stage.show();
+                stage.setOnHiding(event1 -> {
+                    System.out.println("QQQQQQ");
+                    for(Label item : friendsList) {
+                        friendsVBox.getChildren().remove(item);
+                    }
+                    friendsList.clear();
+                    SetFriendsList();
+                    SetFriendsUI();
+                    String mapRequest = CreateMapRequest();
+                    if(!Objects.equals(mapRequest, "InvalidMap"))
+                        webEngine.load(mapRequest);
+                    else
+                        webEngine.load("https://www.google.com/maps");
+                });
                 // Hide this current window (if this is what you want)
                 //((Node)(event.getSource())).getScene().getWindow().hide();
             }
@@ -339,7 +414,9 @@ public class Controller {
                         regAuthVBox.getChildren().remove(signUpButtons);
                         regAuthVBox.getChildren().remove(signInUpError);
 
-                        SaveUserInfo(resultSet.getInt("id"), resultSet.getString("login"), resultSet.getString("password"), resultSet.getString("coordinateX"), resultSet.getString("coordinateY"));
+                        SaveUserInfo(resultSet.getInt("id"), resultSet.getString("login"),
+                                resultSet.getString("password"), resultSet.getString("coordinateX"),
+                                resultSet.getString("coordinateY"), resultSet.getString("placeName"), resultSet.getString("placeData"));
                         ShowMainWindow();
                     } else {
                         throw new Exception("MySQL Add to Database error!");
@@ -385,12 +462,20 @@ public class Controller {
         backToRegAuthButtonUp.addEventHandler(MouseEvent.MOUSE_EXITED, event -> Main.getPrimaryStage().getScene().setCursor(Cursor.DEFAULT));
         userAddFriendButton.addEventHandler(MouseEvent.MOUSE_ENTERED, event -> Main.getPrimaryStage().getScene().setCursor(Cursor.HAND));
         userAddFriendButton.addEventHandler(MouseEvent.MOUSE_EXITED, event -> Main.getPrimaryStage().getScene().setCursor(Cursor.DEFAULT));
+        setCoordinatesButton.addEventHandler(MouseEvent.MOUSE_ENTERED, event -> Main.getPrimaryStage().getScene().setCursor(Cursor.HAND));
+        setCoordinatesButton.addEventHandler(MouseEvent.MOUSE_EXITED, event -> Main.getPrimaryStage().getScene().setCursor(Cursor.DEFAULT));
+        setCoordinatesButtonAccept.addEventHandler(MouseEvent.MOUSE_ENTERED, event -> Main.getPrimaryStage().getScene().setCursor(Cursor.HAND));
+        setCoordinatesButtonAccept.addEventHandler(MouseEvent.MOUSE_EXITED, event -> Main.getPrimaryStage().getScene().setCursor(Cursor.DEFAULT));
+        setCoordinatesButtonCancel.addEventHandler(MouseEvent.MOUSE_ENTERED, event -> Main.getPrimaryStage().getScene().setCursor(Cursor.HAND));
+        setCoordinatesButtonCancel.addEventHandler(MouseEvent.MOUSE_EXITED, event -> Main.getPrimaryStage().getScene().setCursor(Cursor.DEFAULT));
     }
 
-    private void SaveUserInfo(Integer id, String login, String password, String x, String y) {
+    private void SaveUserInfo(Integer id, String login, String password, String x, String y, String placeName, String placeData) {
         user = new User(id, login, password);
         user.setCoordinateX(x);
         user.setCoordinateY(y);
+        user.setPlaceName(placeName);
+        user.setPlaceData(placeData);
     }
     private void LoadUserInfo(Integer id, String login, String password, String x, String y) {
         user = new User(id, login, password);
@@ -433,27 +518,36 @@ public class Controller {
         List<String> newList = new ArrayList<>();
         Integer num = 1;
         for (User item : list) {
-//            newList.add(num++ + ": " + item.getLogin());
-            newList.add(item.getLogin());
+            newList.add(num++ + ": " + item.getLogin());
+//            newList.add(item.getLogin());
         }
         return newList;
     }
 
     private String CreateMapRequest() {
+        String[] userMapColors = {"0xA9DB46FF", "0xD271B3FF", "0x84D271FF", "0x3AB0EBFF", "0xF4C92CFF", "0xF59834FF", "0xE55952FF", "0x976FD2FF", "0x71C5D2FF"};
+        Integer count = 0, colorId = 0;
         StringBuilder mapURL = new StringBuilder("https://maps.googleapis.com/maps/api/staticmap?&size=700x550&maptype=roadmap");
         for(User item : user.getFriends()) {
             if(!item.getCoordinateX().equals("0")) {
-                mapURL.append("&markers=color:blue%7Clabel:").append(GetIdInList(item.getLogin())).append("%7C").append(item.getCoordinateX()).append(",").append(item.getCoordinateY());
+                mapURL.append("&markers=color:" + userMapColors[colorId] + "%7Clabel:").append(GetIdInList(item.getLogin())).append("%7C").append(item.getCoordinateX()).append(",").append(item.getCoordinateY());
+                count++;
+                colorId++;
+                if(colorId == 8)
+                    colorId = 0;
             }
         }
         mapURL.append("&key=AIzaSyDJZqRCFMS5d0eU8K5Sch2mhQYjzqDbgRM");
         System.out.println(mapURL);
-        return mapURL.toString();
+        if(count == 0)
+            return "InvalidMap";
+        else
+            return mapURL.toString();
     }
     private Integer GetIdInList(String name) {
         Integer count = 1;
-        for(String item : friends.getItems()) {
-            if(item.contains(name))
+        for(User item : user.getFriends()) {
+            if(item.getLogin().contains(name))
                 return count;
             count++;
         }

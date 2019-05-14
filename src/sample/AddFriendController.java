@@ -78,7 +78,8 @@ public class AddFriendController {
                     if (!Objects.equals(tempId, Controller.user.getId())) {
                         Controller.user.addFriend(tempId);
                         errorField.setText("Friend was added!");
-                        Controller.friends.setItems(FXCollections.observableList(Controller.LoadFriends(Controller.user.getFriends())));
+//                        Controller.friends.setItems(FXCollections.observableList(Controller.LoadFriends(Controller.user.getFriends())));
+//                        Controller.SetFriendsList();
                     }
                 } else {
                     errorField.setText("No such user!");
@@ -89,11 +90,11 @@ public class AddFriendController {
         });
 
         mainPane.setStyle("-fx-background-image: url(\"res/background.png\");");
-        exitIcon.setImage(new Image("res/iconExit.png", 15, 15, false, false));
+        exitIcon.setImage(new Image("res/iconExit.png"));
 
         loginLabel.setStyle("-fx-text-fill: #FFFFFF; -fx-font-size: 16px; -fx-font-weight: bold;");
         loginField.setStyle("-fx-background-color: transparent; -fx-text-fill: #FFFFFF; -fx-border-color: #FFFFFF; -fx-border-width: 1;");
-        searchButton.setStyle("-fx-text-fill: #FFFFFF; -fx-background-color: #ddcb49; -fx-font-size: 16px;");
+        searchButton.setStyle("-fx-text-fill: #FFFFFF; -fx-background-color: #7085d1; -fx-font-size: 12px;");
         errorField.setStyle("-fx-text-fill: #FFFFFF; -fx-font-size: 14px;");
 
         errorField.setText("");

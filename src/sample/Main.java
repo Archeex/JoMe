@@ -27,7 +27,7 @@ public class Main extends Application {
         primaryStage.setTitle("JoMe Application");
         primaryStage.setScene(new Scene(root, 940, 550));
         primaryStage.initStyle(StageStyle.UNDECORATED);
-        primaryStage.getIcons().add(new Image("res/JoMe.png"));
+        primaryStage.getIcons().add(new Image("res/logo.png"));
         primaryStage.show();
         primaryStage.setResizable(false);
     }
