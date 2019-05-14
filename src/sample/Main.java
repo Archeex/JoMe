@@ -4,15 +4,30 @@ import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
+import javafx.scene.image.Image;
 import javafx.stage.Stage;
+import javafx.stage.StageStyle;
 
 public class Main extends Application {
 
+    private static Stage primaryStage;
+
+    private void setPrimaryStage(Stage stage) {
+        Main.primaryStage = stage;
+    }
+
+    static Stage getPrimaryStage() {
+        return Main.primaryStage;
+    }
+
     @Override
-    public void start(Stage primaryStage) throws Exception{
+    public void start(Stage primaryStage) throws Exception {
+        setPrimaryStage(primaryStage);
         Parent root = FXMLLoader.load(getClass().getResource("sample.fxml"));
         primaryStage.setTitle("JoMe Application");
-        primaryStage.setScene(new Scene(root, 1000, 550));
+        primaryStage.setScene(new Scene(root, 940, 550));
+        primaryStage.initStyle(StageStyle.UNDECORATED);
+        primaryStage.getIcons().add(new Image("res/logo.png"));
         primaryStage.show();
         primaryStage.setResizable(false);
     }

@@ -1,7 +1,7 @@
 package sample;
 
 import javax.swing.plaf.nimbus.State;
-import java.lang.Float;
+import java.lang.String;
 import java.sql.ResultSet;
 import javafx.collections.FXCollections;
 
@@ -20,8 +20,10 @@ public class User {
     private String login = null;
     private String password = null;
     private List<User> friendsList = new ArrayList<>();
-    private Float coordinateX;
-    private Float coordinateY;
+    private String placeName;
+    private String placeData;
+    private String coordinateX;
+    private String coordinateY;
 
     User(Integer id, String login, String password) {
         this.id = id;
@@ -39,8 +41,11 @@ public class User {
             assert resultSet != null;
             if (resultSet.next()) {
                 User newFriend = new User(friendId, resultSet.getString("login"), resultSet.getString("password"));
-                newFriend.setCoordinateX(Float.valueOf(resultSet.getString("coordinateX")));
-                newFriend.setCoordinateY(Float.valueOf(resultSet.getString("coordinateY")));
+                newFriend.setCoordinateX(resultSet.getString("coordinateX"));
+                System.out.println(resultSet.getString("coordinateX"));
+                newFriend.setCoordinateY(resultSet.getString("coordinateY"));
+                newFriend.setPlaceName(resultSet.getString("placeName"));
+                newFriend.setPlaceData(resultSet.getString("placeData"));
                 friendsList.add(newFriend);
                 StringBuilder friends = new StringBuilder();
                 for(User item : friendsList) {
@@ -80,16 +85,54 @@ public class User {
         this.password = password;
     }
 
-    public Float getCoordinateX() {
+    public String getCoordinateX() {
         return coordinateX;
     }
-    void setCoordinateX(Float coordinateX) {
+    void setCoordinateX(String coordinateX) {
         this.coordinateX = coordinateX;
     }
-    public Float getCoordinateY() {
+    public String getCoordinateY() {
         return coordinateY;
     }
-    void setCoordinateY(Float coordinateY) {
+    void setCoordinateY(String coordinateY) {
         this.coordinateY = coordinateY;
+    }
+
+    public String getPlaceName() {
+        return placeName;
+    }
+
+    public void setPlaceName(String placeName) {
+        this.placeName = placeName;
+    }
+
+    public String getPlaceData() {
+        return placeData;
+    }
+
+    public void setPlaceData(String placeData) {
+        this.placeData = placeData;
+    }
+
+    void savePlace() {
+        String sql;
+        ResultSet resultSet = null;
+        try {
+            Statement statement = connection.createStatement();
+            sql = "SELECT * FROM accounts WHERE id = '" + id + "'";
+            resultSet = statement.executeQuery(sql);
+            assert resultSet != null;
+            if (resultSet.next()) {
+                sql = "UPDATE accounts SET placeName = '" + placeName.replace("'", "\\'") +
+                        "', placeData = '" + placeData.replace("'", "\\'") +
+                        "', coordinateX = '" + coordinateX + "', coordinateY = '" + coordinateY + "' WHERE id = '" + id + "'";
+//                sql = "UPDATE accounts SET placeName = '" + placeName + "' WHERE id = '" + Controller.user.getId() + "'"; // + "', placeData = '" + placeData
+                statement.executeUpdate(sql);
+            } else {
+                throw new Exception("MySQL Add Place error!");
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 }

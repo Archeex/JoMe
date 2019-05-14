@@ -1,3 +1,9 @@
 
 .idea/
-Resources/
+out/
+.gitattributes
+*.iml
+*.log
+*.iml
+*.MF
+JoMe.iml
