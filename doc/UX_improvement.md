@@ -54,7 +54,7 @@
   
    ![](https://github.com/Archeex/JoMe/blob/master/res/SIGNINafter.png)
    
-   ![](https://github.com/Archeex/JoMe/blob/master/res/SIGNINafter.png)
+   ![](https://github.com/Archeex/JoMe/blob/master/res/SIGNINENTERafter.png)
    
 #### 4.1 Главное окно
 
