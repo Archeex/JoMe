@@ -16,11 +16,11 @@
 ##### 6. Диаграммы
 Структурная схема
 
-![structure](structure.png)
+![structure](structure.jpg)
 
 Диаграмма классов
 
-![classes](classdiagram.jpg)
+![classes](classdiagram.png)
 
 
  
