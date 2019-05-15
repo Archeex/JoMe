@@ -56,7 +56,7 @@
    
    ![](https://github.com/Archeex/JoMe/blob/master/res/SIGNINENTERafter.png)
    
-#### 4.1 Главное окно
+#### 4.2 Главное окно
 
   **До**
   
