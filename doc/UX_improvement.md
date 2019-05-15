@@ -43,6 +43,21 @@
     
 ### 4. Сравнение "До/После"
 
+#### 4.1 Окно авторизации
+
+   **До**
+  
+   ![](https://github.com/Archeex/JoMe/blob/master/res/SIGNINbefore.jpg)
+   
+    
+  **После**
+  
+   ![](https://github.com/Archeex/JoMe/blob/master/res/SIGNINafter.png)
+   
+   ![](https://github.com/Archeex/JoMe/blob/master/res/SIGNINafter.png)
+   
+#### 4.1 Главное окно
+
   **До**
   
    ![](https://github.com/Archeex/JoMe/blob/master/res/MAINbefore.jpg)
