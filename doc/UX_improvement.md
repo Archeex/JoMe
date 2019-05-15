@@ -45,7 +45,7 @@
 
   **До**
   
-   ![](https://github.com/Archeex/JoMe/blob/master/res/MAINbefore.png)
+   ![](https://github.com/Archeex/JoMe/blob/master/res/MAINbefore.jpg)
    
     
   **После**
