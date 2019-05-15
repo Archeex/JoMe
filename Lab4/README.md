@@ -16,7 +16,7 @@
 ##### 6. Диаграммы
 Структурная схема
 
-![structure](structure.jpg)
+![structure](structure.png)
 
 Диаграмма классов
 
